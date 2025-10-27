@@ -167,7 +167,7 @@ FunctionsToExport = @(
     'Show-Stack', 'Show-StackInstance',
 
     # Identity Center
-    'Show-IdcAssignment'
+    'Show-SsoAssignment', 'Show-SsoUserPermission'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry,

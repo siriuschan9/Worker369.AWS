@@ -93,7 +93,7 @@ Export-ModuleMember -Alias @(
     'stack_show', 'stackinstance_show',
 
     # Identity Center
-    'idc_assign_show'
+    'sso_assign_show', 'sso_uperm_show'
 )
 
 # Variables

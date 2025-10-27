@@ -1,12 +1,8 @@
-function Show-IdcAssignment
+function Show-SsoAssignment
 {
     [CmdletBinding()]
-    [Alias('idc_assign_show')]
+    [Alias('sso_assign_show')]
     param (
-        [Parameter(Position = 0, Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [string]
-        $InstanceArn,
-
         [ValidateSet('Default')]
         [string]
         $View = 'Default',
@@ -32,7 +28,6 @@ function Show-IdcAssignment
     $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
 
     # Use snake_case.
-    $_instance_arn     = $InstanceArn
     $_view             = $View
     $_group_by         = $GroupBy
     $_sort             = $Sort
@@ -41,10 +36,15 @@ function Show-IdcAssignment
     $_no_row_separator = $NoRowSeparator.IsPresent
 
     try {
-        # Query the IDC instance.
+        # Query the IDC instance. There can only be one instance in a region.
         Write-Message -Progress $_cmdlet_name "Retrieving Identity Center Instance."
-        $_idc_instance = Get-SSOADMNInstance -Verbose:$false $_instance_arn
-        if (-not $_idc_instance) { return }
+        $_instance = Get-SSOADMNInstanceList -Verbose:$false
+
+        if (-not $_instance) { return }
+
+        # Save a reference to the Instance ARN and Store ID.
+        $_instance_arn = $_instance.InstanceArn
+        $_store_id     = $_instance.IdentityStoreId
 
         # Query all AWS accounts and put them in a lookup.
         Write-Message -Progress $_cmdlet_name "Retrieving AWS Accounts."
@@ -54,18 +54,18 @@ function Show-IdcAssignment
         # Query all Permission Sets
         Write-Message -Progress $_cmdlet_name "Retrieving Permission Sets."
         $_perm_list = `
-            Get-SSOADMNPermissionSetList -Verbose:$false $_idc_instance.InstanceArn |
-            Get-SSOADMNPermissionSet -Verbose:$false -InstanceArn $_idc_instance.InstanceArn
+            Get-SSOADMNPermissionSetList -Verbose:$false $_instance_arn |
+            Get-SSOADMNPermissionSet -Verbose:$false -InstanceArn $_instance_arn
         if (-not $_perm_list) { return }
 
         # Query all Users
         Write-Message -Progress $_cmdlet_name "Retrieving Users."
-        $_user_list = Find-IDSUserList -Verbose:$false -IdentityStoreId $_idc_instance.IdentityStoreId
+        $_user_list = Find-IDSUserList -Verbose:$false -IdentityStoreId $_store_id
         if (-not $_user_list) {return }
 
         # Query all Groups and put them in a lookup
         Write-Message -Progress $_cmdlet_name "Retrieving Groups."
-        $_group_list = (Find-IDSGroupList -Verbose:$false -IdentityStoreId $_idc_instance.IdentityStoreId) ?? @()
+        $_group_list = (Find-IDSGroupList -Verbose:$false -IdentityStoreId $_store_id) ?? @()
 
         $_acct_lookup  = ($_acct_list  | Group-Object -AsHashTable Id) ?? @{}
         $_user_lookup  = ($_user_list  | Group-Object -AsHashTable UserId) ?? @{}
@@ -82,7 +82,7 @@ function Show-IdcAssignment
         foreach ($_group in $_group_list)
         {
             $_group_members = Get-IDSGroupMembershipList -Verbose:$false `
-                -IdentityStoreId $_idc_instance.IdentityStoreId -GroupId $_group.GroupId
+                -IdentityStoreId $_store_id -GroupId $_group.GroupId
 
             foreach ($_member in $_group_members)
             {
@@ -101,17 +101,17 @@ function Show-IdcAssignment
         # USER, user_id, acct_id -> perm_set1, perm_set2, ...
         $_user_assignment_lookup = $_user_list | ForEach-Object {
             Get-SSOADMNAccountAssignmentsForPrincipalList -Verbose:$false `
-            -InstanceArn $_idc_instance.InstanceArn `
+            -InstanceArn $_instance_arn `
             -PrincipalType USER `
             -PrincipalId $_.UserId
-        }
+        } `
         | Where-Object PrincipalType -eq 'USER' # We need a filter here because the result will return inherited groups.
         | Group-Object -AsHashTable -AsString PrincipalType, PrincipalId, AccountId
 
         # GROUP, group_id, acc_id -> perm_set1, perm_set2, ...
         $_group_assignment_lookup = $_group_list | ForEach-Object {
             Get-SSOADMNAccountAssignmentsForPrincipalList -Verbose:$false `
-            -InstanceArn $_idc_instance.InstanceArn `
+            -InstanceArn $_instance_arn `
             -PrincipalType GROUP `
             -PrincipalId $_.GroupId
         } | Group-Object -AsHashTable -AsString PrincipalType, PrincipalId, AccountId
