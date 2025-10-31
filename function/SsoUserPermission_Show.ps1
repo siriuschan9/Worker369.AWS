@@ -187,7 +187,7 @@ function Show-SsoUserPermission
                 {
                     $_inheritance_lookup[$_inheritance_key] = [System.Collections.Generic.HashSet[string]]::new()
                 }
-                # Enclose with asterisk to help us identity direct assignment.
+                # Enclose with asterisk to help us identity direct assignment later.
                 $_inheritance_lookup[$_inheritance_key].Add("*$($_user.UserId)*") | Out-Null
             }
         }
@@ -275,7 +275,7 @@ function Show-SsoUserPermission
                 $_perm = $_perm_lookup[$_assignment.PermissionSet]
 
                 if ($_assignment.IsDirectlyAssigned) {
-                     Write-Host -NoNewline "$($_underline)$($_perm.Name)$($_reset) "
+                    Write-Host -NoNewline "$($_underline)$($_perm.Name)$($_reset) "
                 }
                 else {
                     Write-Host -NoNewline "$($_perm.Name) "

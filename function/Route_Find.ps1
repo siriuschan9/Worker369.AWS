@@ -23,6 +23,7 @@ function Find-Route
                     '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])' +         # 255
                     '(\/([0-9]|[1-2][0-9]|3[0-2]))?$'
 
+                $_prefix_pattern = "[0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]";
                 $_hex_pattern    = "[0-9a-fA-F]"
                 $_hextet_pattern = "$($_hex_pattern){1,4}"
 
@@ -349,7 +350,7 @@ function Find-Route
                 $_predicate = {
                     param($_cidr1)
                     $_cidr1 -is [IPv4Subnet] `
-                        ? ((Test-IPv4CidrOverlap $_cidr1 $_cidr2) -and -not (Test-IPv4CidrOverlap $_cidr1 $_loopback4))
+                        ? ((Test-IPv4CidrOverlap $_cidr1 $_cidr2) -and -not (Test-IPv4CidrOverlap $_cidr2 $_loopback4))
                         : $false
                 }.GetNewClosure()
             }
@@ -358,7 +359,7 @@ function Find-Route
                 $_predicate = {
                     param($_cidr1)
                     $_cidr1 -is [IPv6Subnet] `
-                        ? ((Test-IPv6CidrOverlap $_cidr1 $_cidr2) -and -not (Test-IPv6CidrOverlap $_cidr1 $_loopback6))
+                        ? ((Test-IPv6CidrOverlap $_cidr1 $_cidr2) -and -not (Test-IPv6CidrOverlap $_cidr2 $_loopback6))
                         : $false
                 }.GetNewClosure()
             }
