@@ -63,7 +63,9 @@ Register-ArgumentCompleter -ParameterName 'VpcId' -CommandName $_cmd_lookup['Vpc
 
     if (-not $_vpc_list) { return }
 
-    $_align = $_vpc_list.VpcId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $_align = `
+        $_vpc_list.VpcId | Select-Object -ExpandProperty Length |
+        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_vpc_list | Get-HintItem -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -Align $_align |
     Sort-Object | ForEach-Object {

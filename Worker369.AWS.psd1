@@ -61,7 +61,8 @@ RequiredModules = @(
     'AWS.Tools.EC2',
     'AWS.Tools.CloudFormation',
     'AWS.Tools.IdentityStore',
-    'AWS.Tools.SSOAdmin'
+    'AWS.Tools.SSOAdmin',
+    'AWS.Tools.Organizations'
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -167,7 +168,10 @@ FunctionsToExport = @(
     'Show-Stack', 'Show-StackInstance',
 
     # Identity Center
-    'Show-SsoAssignment', 'Show-SsoUserPermission'
+    'Show-SsoAssignment', 'Show-SsoUserPermission',
+
+    # AWS Organization
+    'Show-OrgTree'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry,

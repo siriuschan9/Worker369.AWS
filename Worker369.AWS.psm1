@@ -93,7 +93,10 @@ Export-ModuleMember -Alias @(
     'stack_show', 'stackinstance_show',
 
     # Identity Center
-    'sso_assign_show', 'sso_uperm_show'
+    'sso_assign_show', 'sso_uperm_show',
+
+    # AWS Organization
+    'org_tree'
 )
 
 # Variables

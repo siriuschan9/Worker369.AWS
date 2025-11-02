@@ -27,7 +27,9 @@ Register-ArgumentCompleter -ParameterName 'NetworkAclId' -CommandName $_cmd_look
 
     if (-not $_acl_list) { return }
 
-    $_align = $_acl_list.NetworkAclId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $_align = `
+        $_acl_list.NetworkAclId | Select-Object -ExpandProperty Length |
+        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_acl_list | Get-HintItem -IdPropertyName 'NetworkAclId' -TagPropertyName 'Tags' -Align $_align |
     Sort-Object | ForEach-Object {

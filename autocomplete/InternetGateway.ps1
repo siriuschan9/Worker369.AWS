@@ -28,7 +28,9 @@ Register-ArgumentCompleter `
 
     if (-not $_igw_list) { return }
 
-    $_align = $_igw_list.InternetGatewayId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $_align = `
+        $_igw_list.InternetGatewayId | Select-Object -ExpandProperty Length |
+        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_igw_list | Get-HintItem -IdPropertyName 'InternetGatewayId' -TagPropertyName 'Tags' -Align $_align |
     Sort-Object | ForEach-Object {
@@ -55,7 +57,7 @@ Register-ArgumentCompleter `
     )
 
     Get-EC2InternetGateway -Verbose:$false -Filter @{
-        Name = 'tag:Name'
+        Name   = 'tag:Name'
         Values = "$_word_to_complete*"
     } |
     Select-Object -ExpandProperty Tags | Where-Object Key -eq 'Name' |

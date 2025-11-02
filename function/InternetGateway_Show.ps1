@@ -40,23 +40,6 @@ function Show-InternetGateway
     $_plaintext        = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
-    $_select_definition = @{
-        InternetGatewayId = {
-            $_.InternetGatewayId
-        }
-        Name = {
-            $_.Tags | Where-Object Key -eq 'Name' | Select-Object -ExpandProperty Value
-        }
-        AttachedToVpc = {
-            $_vpc_lookup[$_.InternetGatewayId] | Get-ResourceString `
-                -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plaintext
-        }
-    }
-
-    $_view_definition = @{
-        Default = @('InternetGatewayId', 'Name', 'AttachedToVpc')
-    }
-
     # Apply default sort order.
     if (
         -not $PSBoundParameters.Keys.Contains('Exclude') -and
@@ -99,6 +82,23 @@ function Show-InternetGateway
 
     # Exit early if there are not internet gateway to show.
     if(-not $_igw_list) { return }
+
+    $_select_definition = @{
+        InternetGatewayId = {
+            $_.InternetGatewayId
+        }
+        Name = {
+            $_.Tags | Where-Object Key -eq 'Name' | Select-Object -ExpandProperty Value
+        }
+        AttachedToVpc = {
+            $_vpc_lookup[$_.InternetGatewayId] | Get-ResourceString `
+                -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plaintext
+        }
+    }
+
+    $_view_definition = @{
+        Default = @('InternetGatewayId', 'Name', 'AttachedToVpc')
+    }
 
     # Manufacture the select list, sort list and project list.
     $_select_list, $_sort_list, $_project_list = Get-QueryDefinition `

@@ -48,7 +48,7 @@ function Show-VpcBpaExclusion
 
             CreationDate = { $_.CreationTimestamp }
 
-            DeletionDate = { $_.DeletionTimestamp }
+            DeletionDate = { $_.DeletionTimestamp -eq [datetime]::MinValue ? $null : $_.DeletionTimestamp }
 
             ExclusionId = { $_.ExclusionId }
 

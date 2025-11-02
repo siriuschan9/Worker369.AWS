@@ -31,7 +31,9 @@ Register-ArgumentCompleter -ParameterName 'GroupId' -CommandName $_cmd_lookup['G
 
     if (-not $_sg_list) { return }
 
-    $_align = $_sg_list.SecurityGroupId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $_align = `
+        $_sg_list.SecurityGroupId | Select-Object -ExpandProperty Length |
+        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_sg_list | Get-HintItem -IdPropertyName 'GroupId' -TagPropertyName 'Tags' -Align $_align |
     Sort-Object | ForEach-Object {

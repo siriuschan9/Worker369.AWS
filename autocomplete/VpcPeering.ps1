@@ -52,7 +52,9 @@ $_script_lookup = @{
 
         if (-not $_pcx_list) { return }
 
-        $_align = $_pcx_list.VpcId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+        $_align = `
+            $_pcx_list.VpcId | Select-Object -ExpandProperty Length |
+            Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
         $_pcx_list | Get-HintItem -IdPropertyName 'VpcPeeringConnectionId' -TagPropertyName 'Tags' -Align $_align |
         Sort-Object | ForEach-Object {

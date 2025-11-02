@@ -59,7 +59,9 @@ Register-ArgumentCompleter -ParameterName 'SubnetId' -CommandName $_cmd_lookup['
 
     if (-not $_subnet_list) { return }
 
-    $_align = $_subnet_list.SubnetId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $_align = `
+        $_subnet_list.SubnetId | Select-Object -ExpandProperty Length |
+        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_subnet_list | Get-HintItem -IdPropertyName 'SubnetId' -TagPropertyName 'Tags' -Align $_align |
     Sort-Object | Where-Object { $_ -like "$_word_to_complete*" } | ForEach-Object {

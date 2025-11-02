@@ -39,7 +39,9 @@ Register-ArgumentCompleter -ParameterName 'RouteTableId' -CommandName $_cmd_look
 
     if (-not $_rt_list) { return }
 
-    $_align = $_rt_list.RouteTableId.Length | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
+    $_align = `
+        $_rt_list.RouteTableId | Select-Object -ExpandProperty Length |
+        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_rt_list | Get-HintItem -IdPropertyName 'RouteTableId' -TagPropertyName 'Tags' -Align $_align |
     Sort-Object | ForEach-Object {

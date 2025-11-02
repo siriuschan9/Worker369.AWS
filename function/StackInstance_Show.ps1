@@ -96,11 +96,11 @@ function Show-StackInstance
         # Query StackSets.
 
         if ($_param_set -eq 'StackSetName') {
-            Write-Message -Progress -Activity $_cmdlet_name -Message "Querying StackSet '$_ss_name'."
+            Write-Message -Progress $_cmdlet_name "Querying StackSet '$_ss_name'."
             $_ss_name_list = Get-CFNStackSet -Verbose:$false -CallAs $_call_as $_ss_name -Select StackSet.StackSetName
         }
         else {
-            Write-Message -Progress -Activity $_cmdlet_name -Message "Querying StackSets."
+            Write-Message -Progress $_cmdlet_name "Querying StackSets."
             $_ss_name_list = Get-CFNStackSetList -Verbose:$false -CallAs $_call_as ACTIVE -Select Summaries.StackSetName
         }
 
@@ -110,9 +110,12 @@ function Show-StackInstance
         # Query Stack Instances.
         $_si_list = $_ss_name_list | ForEach-Object {
 
-            Write-Message -Progress -Activity $_cmdlet_name -Message "Querying Stack Instances for StackSet '$_'."
+            Write-Message -Progress $_cmdlet_name "Querying Stack Instances for StackSet '$_'."
             Get-CFNStackInstanceList -Verbose:$false -CallAs $_call_as -StackSetName $_
         }
+
+        # Close the progress bar
+        Write-Message -Progress -Complete $_cmdlet_name "Querying Stack Instances completed."
 
         # If there are no Stack Instances to show, exit early.
         if (-not $_si_list) { return }
