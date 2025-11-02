@@ -91,6 +91,7 @@ Export-ModuleMember -Alias @(
 
     # CloudFormation
     'stack_show', 'stackinstance_show',
+    'iac_scan_brief', 'iac_scan_detail',
 
     # Identity Center
     'sso_assign_show', 'sso_uperm_show',

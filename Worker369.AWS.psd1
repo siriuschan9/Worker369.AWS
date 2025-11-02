@@ -166,6 +166,7 @@ FunctionsToExport = @(
 
     # CloudFormation
     'Show-Stack', 'Show-StackInstance',
+    'Show-IacScanBrief', 'Show-IacScanDetail',
 
     # Identity Center
     'Show-SsoAssignment', 'Show-SsoUserPermission',
