@@ -88,7 +88,7 @@ function Enable-VpcDnsResolution
             {
                 # Call the API to enable DNS resolution support for this VPC.
                 try {
-                    Edit-EC2VpcAttribute -EnableDnsSupport $true -Verbose:$false $_.VpcId
+                    Edit-EC2VpcAttribute -Verbose:$false -EnableDnsSupport $true  $_.VpcId
                 }
                 catch {
                     # Remove caught exception emitted into $Error list.

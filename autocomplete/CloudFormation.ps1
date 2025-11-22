@@ -42,7 +42,7 @@ Register-ArgumentCompleter -ParameterName 'StackSetName' -CommandName $_cmd_look
         $_fake_bound_parameters
     )
 
-    $_call_as = $_fake_bound_parameters['CallAs'] ?? 'SELF'
+    $_call_as = $_fake_bound_parameters['CallAs'] ?? 'DELEGATED_ADMIN'
 
     Get-CFNStackSetList -CallAs $_call_as -Select Summaries.StackSetName -Status ACTIVE |
     Where-Object { $_ -like "$_word_to_complete*" } | ForEach-Object {

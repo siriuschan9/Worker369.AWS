@@ -6,6 +6,7 @@ function Show-StackInstance
     [CmdletBinding(DefaultParameterSetName = 'None')]
     [Alias('stackinstance_show')]
     param (
+        [Parameter(Position = 0)]
         [ValidateSet('Default')]
         [string]
         $View = 'Default',

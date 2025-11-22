@@ -43,32 +43,6 @@ function Disable-VpcNauMetrics
     {
         # For easy pickup.
         $_param_set = $PSCmdlet.ParameterSetName
-
-        # Use snake_case.
-        $_stored_aws_credentials = $StoredAWSCredentials
-        $_stored_aws_region      = $StoredAWSRegion
-
-        # Check if $StoredAWSCredentials is set.
-        if (-not $_stored_aws_credentials)
-        {
-            $_error = New-ErrorRecord `
-                -ErrorMessage 'Shell variable "StoredAWSCredentials" not set' `
-                -ErrorId 'DefaultAWSCredentialsNotSet' `
-                -ErrorCategory NotSpecified
-
-            $PSCmdlet.ThrowTerminatingError($_error)
-        }
-
-         # Check if $StoredAWSRegion is set.
-        if (-not $_stored_aws_region)
-        {
-            $_error = New-ErrorRecord `
-                -ErrorMessage 'Shell variable "StoredAWSRegion" not set' `
-                -ErrorId 'DefaultAWSRegionNotSet' `
-                -ErrorCategory NotSpecified
-
-            $PSCmdlet.ThrowTerminatingError($_error)
-        }
     }
 
     PROCESS
@@ -114,11 +88,7 @@ function Disable-VpcNauMetrics
             {
                 # Use AWS CLI to call the API to disable the NAU for this VPC.
                 try {
-                    aws ec2 modify-vpc-attribute `
-                        --profile $_stored_aws_credentials `
-                        --region $_stored_aws_region `
-                        --vpc-id $_.VpcId `
-                        --no-enable-network-address-usage-metrics
+                    Edit-EC2VpcAttribute -Verbose:$false -EnableNetworkAddressUsageMetric $false $_.VpcId
                 }
                 catch {
                     # Remove caught exception emitted into $Error list.
