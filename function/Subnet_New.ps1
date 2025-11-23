@@ -33,7 +33,7 @@ function New-Subnet
 
         [Parameter(ParameterSetName = 'VpcId', Mandatory, ValueFromPipelineByPropertyName)]
         [ValidatePattern('^vpc-[0-9a-f]{17}$', ErrorMessage = 'Invalid VpcId.')]
-        [String]
+        [string]
         $VpcId,
 
         [Parameter(ParameterSetName = 'VpcName', Mandatory)]
@@ -41,7 +41,7 @@ function New-Subnet
         $VpcName,
 
         [Parameter(Mandatory)]
-        [String]
+        [string]
         $AvailabilityZone,
 
         [ValidatePattern(
@@ -50,7 +50,7 @@ function New-Subnet
             '\/([0-9]|[1-2][0-9]|3[0-2])$',                                # /32
             ErrorMessage = 'Invalid Ipv4Cidr block.'
         )]
-        [String]
+        [string]
         $Ipv4Cidr,
 
         [ValidateScript(
@@ -82,7 +82,7 @@ function New-Subnet
                 }
             }
         )]
-        [String]
+        [string]
         $Ipv6Cidr,
 
         [switch]

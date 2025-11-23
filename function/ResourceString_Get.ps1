@@ -50,15 +50,15 @@ function Get-ResourceString
         $InputObject,
 
         [Parameter(Mandatory)]
-        [String]
+        [string]
         $IdPropertyName,
 
         [Parameter(ParameterSetName ='NameTag', Mandatory)]
-        [String]
+        [string]
         $TagPropertyName,
 
         [Parameter(ParameterSetName ='NameProperty', Mandatory)]
-        [String]
+        [string]
         $NamePropertyName,
 
         [Parameter()]

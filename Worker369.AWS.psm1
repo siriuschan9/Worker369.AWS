@@ -19,8 +19,8 @@ Export-ModuleMember -Alias @(
     # MFA
     'mfa',
 
-    # Prefix List,
-    'pl_resolve',
+    # Prefix List
+    'pl_resolve', 'pl_read', 'pl_write',
 
     # VPC BPA Exclusion
     'vpc_bpa_excl_show', 'vpc_bpa_excl_add', 'vpc_bpa_excl_edit', 'vpc_bpa_excl_rm',

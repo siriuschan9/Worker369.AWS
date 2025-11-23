@@ -222,7 +222,7 @@ function Copy-Subnet
             -IdPropertyName 'SubnetId' -TagPropertyName 'Tags' -StringFormat IdAndName -PlainText
 
         # Work out the destination Availability Zone.
-        $_dst_availability_zone = [String]::IsNullOrEmpty($_availability_zone) `
+        $_dst_availability_zone = [string]::IsNullOrEmpty($_availability_zone) `
             ? $_src_availability_zone : $_availability_zone
 
         # Work out the destination IPv4 CIDR block.

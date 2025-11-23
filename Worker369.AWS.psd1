@@ -94,7 +94,7 @@ FunctionsToExport = @(
     'Write-MfaProfile',
 
     # Prefix list
-    'Resolve-PrefixList',
+    'Resolve-PrefixList', 'Write-PrefixList',
 
     # VPC BPA Exclusion
     'Show-VpcBpaExclusion', 'New-VpcBpaExclusion', 'Edit-VpcBpaExclusion', 'Remove-VpcBpaExclusion',

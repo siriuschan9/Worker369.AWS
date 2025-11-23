@@ -1,13 +1,16 @@
 $_cmd_lookup = @{
 
     PrefixListId = @(
-        'Resolve-PrefixList'
+        'Resolve-PrefixList', 'Write-PrefixList'
     )
 
     PrefixListName = @(
-        'Resolve-PrefixList'
+        'Resolve-PrefixList', 'Write-PrefixList'
     )
 
+    TargetVersion = @(
+        'Resolve-PrefixList'
+    )
 }
 
 # PrefixListId
@@ -55,6 +58,49 @@ Register-ArgumentCompleter -ParameterName 'PrefixListName' -CommandName $_cmd_lo
         Values = "$_word_to_complete*"
     } |
     Sort-Object | ForEach-Object {
+
+        [System.Management.Automation.CompletionResult]::new(
+            $_,               # completionText
+            $_,               # listItemText
+            'ParameterValue', # resultType
+            $_                # toolTip
+        )
+    }
+}
+
+# TargetVersion
+Register-ArgumentCompleter -ParameterName 'TargetVersion' -CommandName $_cmd_lookup['TargetVersion'] -ScriptBlock {
+    param(
+        $_command_name,
+        $_parameter_name,
+        $_word_to_complete,
+        $_command_ast,
+        $_fake_bound_parameters
+    )
+
+    $_prefix_list_id   = $_fake_bound_parameters['PrefixListId']
+    $_prefix_list_name = $_fake_bound_parameters['PrefixListName']
+
+    if (-not [string]::IsNullOrEmpty($_prefix_list_id))
+    {
+        $_pl_list = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
+            name = 'prefix-list-id'; Values = $_prefix_list_id
+        }
+    }
+    elseif (-not [string]::IsNullOrEmpty($_prefix_list_name))
+    {
+        $_pl_list = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
+            name = 'prefix-list-name'; Values = $_prefix_list_name
+        }
+    }
+
+    if (-not $_pl_list -or $_pl_list.Length -gt 1) {
+        return
+    }
+
+    $_pl = $_pl_list[0]
+
+    1..$_pl.Version | ForEach-Object {
 
         [System.Management.Automation.CompletionResult]::new(
             $_,               # completionText

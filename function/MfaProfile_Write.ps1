@@ -46,16 +46,16 @@ function Write-MfaProfile
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, Position = 0)]
-        [String]
+        [string]
         $SourceProfile,
 
         [Parameter(Mandatory, Position = 1)]
         [ValidatePattern('\d{6}')]
-        [String]
+        [string]
         $TokenCode,
 
         [Parameter()]
-        [String]
+        [string]
         $SerialNumber,
 
         [Parameter()]

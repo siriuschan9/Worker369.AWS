@@ -2,16 +2,19 @@
 function Resolve-PrefixList
 {
     [CmdletBinding()]
-    [Alias("pl_resolve")]
+    [Alias('pl_resolve', 'pl_read')]
     param (
         [Parameter(ParameterSetName = "PrefixListId", Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidatePattern('^pl-([0-9a-f]{8}|[0-9a-f]{17})$')]
-        [String]
+        [string]
         $PrefixListId,
 
         [Parameter(ParameterSetName = "PrefixListName", Position = 0, Mandatory)]
-        [String]
-        $PrefixListName
+        [string]
+        $PrefixListName,
+
+        [int]
+        $TargetVersion
     )
 
     BEGIN
@@ -25,8 +28,9 @@ function Resolve-PrefixList
         # Use snake_case.
         $_pl_id   = $PrefixListId
         $_pl_name = $PrefixListName
+        $_version = $TargetVersion
 
-        # Configure the filter to query the Network ACL.
+        # Configure the filter to query the Prefix List.
         $_filter_name  = $_param_set -eq 'PrefixListId' ? 'prefix-list-id' : 'prefix-list-name'
         $_filter_value = $_param_set -eq 'PrefixListId' ? $_pl_id : $_pl_name
 
@@ -53,7 +57,9 @@ function Resolve-PrefixList
         try {
             foreach ($_pl in $_pl_list)
             {
-                Get-EC2ManagedPrefixListEntry -Verbose:$false $_pl.PrefixListId | Select-Object -ExpandProperty Cidr
+                Get-EC2ManagedPrefixListEntry -Verbose:$false $_pl.PrefixListId `
+                    -TargetVersion ([int]::Min($_pl.Version, $_version))
+                | Select-Object -ExpandProperty Cidr
             }
         }
         catch {

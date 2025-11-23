@@ -8,11 +8,11 @@ function Get-HintItem
         $InputObject,
 
         [Parameter(Mandatory)]
-        [String]
+        [string]
         $IdPropertyName,
 
         [Parameter(Mandatory)]
-        [String]
+        [string]
         $TagPropertyName,
 
         [Parameter(Mandatory)]
