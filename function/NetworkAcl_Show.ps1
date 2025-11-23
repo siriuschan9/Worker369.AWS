@@ -80,7 +80,7 @@ function Show-NetworkAcl
     }
 
     $_view_definition = @{
-        Default = (
+        Default = @(
             'Vpc', 'NetworkAclId', 'Name', 'IsDefault',
             'InboundRules', 'OutboundRules', 'AssociatedSubnet', 'AssociationId'
         )
@@ -170,86 +170,6 @@ function Show-NetworkAcl
             $_nacl.NetworkAclId,
             ($_my_associations | Sort-Object Subnet)
         )
-    }
-
-    # Get the names of columns to display.
-    $_select_names = $_VIEW_DEFINITION[$_view]
-
-    # If Group By is not in the select names, insert it to the select names.
-    if ($_group_by -and $_group_by -notin $_select_names)
-    {
-        $_select_names = @($_group_by) + @($_select_names)
-    }
-
-    # Initialize select list.
-    $_select_list  = [List[object]]::new()
-
-    for($_i = 0 ; $_i -lt $_select_names.Length ; $_i++)
-    {
-        $_select_name = $_select_names[$_i]
-        $_select_list.Add(
-            @{N = "$_select_name" ; E = $_SELECT_DEFINITION[$_select_name]}
-        )
-    }
-
-    # Sort column list = list of @{Name = <column name>; Descending = <true|false>}
-    $_sort_list = [List[object]]::new()
-
-    # Add group to sort list.
-    if($_group_by -and $_group_by -in $_select_names)
-    {
-        $_sort_list.Add(
-            @{
-                Expression = $_group_by;
-                Descending = $false
-            }
-        )
-    }
-
-    # Remove group from the sortable names.
-    $_sort_names = $_select_names | Where-Object {$_ -ne $_group_by}
-
-    # Build the sort list.
-    for($_i = 0 ; $_i -lt $_sort.Length ; $_i++)
-    {
-        # Column number is 1-based. Column index is 0-based
-        $_sort_index = [Math]::Abs($_sort[$_i]) - 1
-
-        # Guard against index out of bound.
-        if ($_sort_index -ge $_sort_names.Length) { continue }
-
-        # Get the column name
-        $_sort_name = $_sort_names[$_sort_index]
-
-        # Get ascending or descending
-        $_descending = $($_sort[$_i] -lt 0)
-
-        $_sort_list.Add(
-            @{
-                Expression = "$_sort_name"
-                Descending = $_descending
-            }
-        )
-    }
-
-    # Remove group from the sortable names.
-    $_project_names = $_select_names | Where-Object {$_ -ne $_group_by}
-
-    # Initialize a project list.
-    $_project_list = [List[object]]::new()
-
-    # Add the group property to the project list first.
-    if ($_group_by -and $_group_by -in $_select_names)
-    {
-        $_project_list.Add($_group_by)
-    }
-
-    # Add all properties not excluded to the project list.
-    for ($_i = 0 ; $_i -lt $_project_names.Length; $_i++)
-    {
-        if (($_i + 1) -notin $_exclude) {
-            $_project_list.Add($_project_names[$_i])
-        }
     }
 
     # Manufacture the select list, sort list and project list.

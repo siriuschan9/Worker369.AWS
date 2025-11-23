@@ -107,7 +107,7 @@ function Show-RouteTable
     }
 
     $_view_definition= @{
-        Default = (
+        Default = @(
             'Vpc', 'RouteTableId', 'Name', 'IsMain', 'Routes', 'Propagated', 'Blackhole',
             'AssociatedSubnet', 'AssociationId'
         )

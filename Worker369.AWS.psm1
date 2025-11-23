@@ -89,6 +89,9 @@ Export-ModuleMember -Alias @(
     # Security Group Rule
     'sgr_show',
 
+    # Lambda
+    'func_show',
+
     # CloudFormation
     'stack_show', 'stackinstance_show',
     'iac_scan_brief', 'iac_scan_detail',

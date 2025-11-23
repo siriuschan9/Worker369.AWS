@@ -92,7 +92,7 @@ function Show-VpcBpaExclusion
             -not $PSBoundParameters.Keys.Contains('Exclude') -and
             -not $PSBoundParameters.Keys.Contains('Sort')
         ) {
-            $_sort = @(-4, 2) # Sort by Status, Resource | See $_VIEW_DEFINITION in BEGIN block.
+            $_sort = @(-4, 2) # Sort by Status, Resource | See $_view_definition in BEGIN block.
         }
 
         # Define Filter for exclusions in Active State only.

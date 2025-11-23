@@ -61,6 +61,7 @@ RequiredModules = @(
     'AWS.Tools.EC2',
     'AWS.Tools.CloudFormation',
     'AWS.Tools.IdentityStore',
+    'AWS.Tools.Lambda',
     'AWS.Tools.SSOAdmin',
     'AWS.Tools.Organizations'
 )
@@ -163,6 +164,9 @@ FunctionsToExport = @(
 
     # Security Group Rule
     'Show-SecurityGroupRule',
+
+    # Lambda
+    'Show-Lambda',
 
     # CloudFormation
     'Show-Stack', 'Show-StackInstance',
