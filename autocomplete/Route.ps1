@@ -193,6 +193,36 @@ Register-ArgumentCompleter -CommandName 'Add-Route' -ParameterName 'Gateway' -Sc
             }
             break
         }
+        # Transit Gateway
+        '^tgw-[0-9-a-f]{0,17}$' {
+            $_tgw_attach_list = Get-EC2TransitGatewayAttachment -Verbose:$false -Filter @{
+                Name   = 'resource-id'
+                Values = $_rt.VpcId
+            }
+
+            if (-not $_tgw_attach_list) { return }
+
+            $_tgw_list = Get-EC2TransitGateway -Verbose:$false -Filter @{
+                Name   = 'transit-gateway-id'
+                Values = $_tgw_attach_list.TransitGatewayId
+            }
+
+            if (-not $_tgw_list) { return }
+
+            $_tgw_align = $_tgw_list.TransitGatewayId.Length | Measure-Object | Select-Object -ExpandProperty Maximum
+
+            $_tgw_list | Get-HintItem -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -Align $_tgw_align |
+            Sort-Object | ForEach-Object {
+
+                [System.Management.Automation.CompletionResult]::new(
+                    $_.ResourceId,    # completionText
+                    $_,               # listItemText
+                    'ParameterValue', # resultType
+                    $_                # toolTip
+                )
+            }
+            break
+        }
         # Network Interface
         '^eni-[0-9-a-f]{0,17}$' {
             $_eni_list = Get-EC2NetworkInterface -Verbose:$false -Filter @{
@@ -428,6 +458,60 @@ Register-ArgumentCompleter -CommandName 'Add-Route' -ParameterName 'Destination'
                     'ParameterValue', # resultType
                     $_                # toolTip
                 )
+            }
+        }
+        # Transit Gateway - Hint TGW route entries.
+        'tgw-[0-9a-f]{17}$' {
+
+            if ($_tgw = Get-EC2TransitGateway -Verbose:$false -TransitGatewayId $_gw)
+            {
+                $_tgw_rt_id = Get-EC2TransitGatewayAttachment -Verbose:$false -Filter @{
+                    Name   = 'resource-id'
+                    Values = $_rt.VpcId
+                } `
+                | Where-Object TransitGatewayId -EQ $_tgw.TransitGatewayId `
+                | Select-Object -ExpandProperty Association `
+                | Select-Object -ExpandProperty TransitGatewayRouteTableId
+
+                if (-not $_tgw_rt_id) { return }
+
+                $_route_list = Search-EC2TransitGatewayRoute $_tgw_rt_id -Verbose:$false -Filter @{
+                    Name = 'state'
+                    Values = 'active'
+                } `
+                | Select-Object -ExpandProperty Routes `
+                | Where-Object {
+                    (
+                        $_.TransitGatewayAttachments |
+                        Select-Object -ExpandProperty ResourceId
+                    ) -notcontains $_rt.VpcId
+                }
+
+                if (-not $_route_list) { return }
+
+                $_route_list | Select-Object -ExpandProperty DestinationCidrBlock | Where-Object {
+                    $_ -notin (@($_dst_ipv4) + @($_dst_ipv6)) -and $_ -like "$($_word_to_complete)*"
+                } `
+                | ForEach-Object {
+                    [System.Management.Automation.CompletionResult]::new(
+                        $_,               # completionText
+                        $_,               # listItemText
+                        'ParameterValue', # resultType
+                        $_                # toolTip
+                    )
+                }
+
+                $_route_list | Select-Object -ExpandProperty PrefixListId | Where-Object {
+                    $_ -notin $_dst_pl -and $_ -like "$($_word_to_complete)*"
+                } `
+                | ForEach-Object {
+                    [System.Management.Automation.CompletionResult]::new(
+                        $_,               # completionText
+                        $_,               # listItemText
+                        'ParameterValue', # resultType
+                        $_                # toolTip
+                    )
+                }
             }
         }
         # VPC Endpoint for S3 or DynamoDB - Hint prefix list.

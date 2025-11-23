@@ -128,16 +128,17 @@ function Show-Route
     # Save a reference to the filtered route table.
     $_rt = $_rt_list[0]
 
-    # If there are no routes to show, exit early
+    # If there are no routes to show, exit early.
     if (-not ($_route_list = $_rt.Routes)) { return }
 
-    # Grab all IDs of prefix lists, internet gateways, vpc endpoints, ENIs and NAT gateways.
+    # Grab all IDs of prefix list and gateway resources.
     $_pl_id_list   = $_route_list | Select-Object -ExpandProperty DestinationPrefixListId
     $_igw_id_list  = $_route_list | Where-Object GatewayId -like 'igw-*' | Select-Object -ExpandProperty GatewayId
     $_vpce_id_list = $_route_list | Where-Object GatewayId -like 'vpce-*'| Select-Object -ExpandProperty GatewayId
+    $_ngw_id_list  = $_route_list | Select-Object -ExpandProperty NatGatewayId
+    $_tgw_id_list  = $_route_list | Select-Object -ExpandProperty TransitGatewayId
     $_pcx_id_list  = $_route_list | Select-Object -ExpandProperty VpcPeeringConnectionId
     $_eni_id_list  = $_route_list | Select-Object -ExpandProperty NetworkInterfaceId
-    $_ngw_id_list  = $_route_list | Select-Object -ExpandProperty NatGatewayId
 
     # CIDR list lookup for prefix lists.
     $_pl_entries_lookup = [Hashtable]::new()
@@ -190,6 +191,16 @@ function Show-Route
                 Name   = 'nat-gateway-id'
                 Values = $_ngw_id_list
             } | Group-Object -AsHashTable NatGatewayId
+        }
+
+        if ($_tgw_id_list)
+        {
+            Write-Verbose "Retrieving Transit Gateways."
+
+            $_tgw_lookup = Get-EC2TransitGateway -Verbose:$false -Filter @{
+                Name   = 'transit-gateway-id'
+                Values = $_tgw_id_list
+            } | Group-Object -AsHashTable TransitGatewayId
         }
 
         if ($_pcx_id_list)
@@ -273,6 +284,12 @@ function Show-Route
                 $_gateway_type = 'NAT Gateway'
                 $_gateway      = $_ngw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'NatGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+            }
+            'tgw-[0-9a-f]{17}'
+            {
+                $_gateway_type = 'Transit Gateway'
+                $_gateway      = $_tgw_lookup[$_target_id] | Get-ResourceString `
+                    -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
             }
             'eni-[0-9a-f]{17}'
             {

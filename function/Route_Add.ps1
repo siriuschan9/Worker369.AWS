@@ -147,6 +147,14 @@ function Add-Route
                     -TagPropertyName 'Tags' `
                     -StringFormat IdAndName -PlainText
             }
+            # Transit Gateway
+            '^tgw-[0-9-a-f]{17}$' {
+                $_add_route_params.Add('TransitGatewayId', $_gw)
+                $_format_gw = Get-EC2TransitGateway -Verbose:$false -TransitGatewayId $_gw | Get-ResourceString `
+                    -IdPropertyName 'TransitGatewayId' `
+                    -TagPropertyName 'Tags' `
+                    -StringFormat IdAndName -PlainText
+            }
             # Network Interface
             '^eni-[0-9-a-f]{17}$' {
                 $_add_route_params.Add('NetworkInterfaceId', $_gw)
@@ -168,14 +176,6 @@ function Add-Route
                 $_add_route_params.Add('VpcEndpointId', $_gw)
                 $_format_gw = Get-EC2VpcEndpoint -Verbose:$false $_gw | Get-ResourceString `
                     -IdPropertyName 'VpcEndpointId' `
-                    -TagPropertyName 'Tags' `
-                    -StringFormat IdAndName -PlainText
-            }
-            # Transit Gateway
-            '^tgw-[0-9-a-f]{17}$' {
-                $_add_route_params.Add('TransitGatewayId', $_gw)
-                $_format_gw = Get-EC2TransitGateway -Verbose:$false $_gw | Get-ResourceString `
-                    -IdPropertyName 'TransitGatewayId' `
                     -TagPropertyName 'Tags' `
                     -StringFormat IdAndName -PlainText
             }

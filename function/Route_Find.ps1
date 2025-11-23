@@ -1,4 +1,5 @@
 using namespace Worker369.Utility
+using namespace System.Collections.Generic
 using namespace System.Management.Automation
 
 function Find-Route
@@ -143,6 +144,7 @@ function Find-Route
     $_pcx_id_list  = $_route_list | Select-Object -ExpandProperty VpcPeeringConnectionId
     $_eni_id_list  = $_route_list | Select-Object -ExpandProperty NetworkInterfaceId
     $_ngw_id_list  = $_route_list | Select-Object -ExpandProperty NatGatewayId
+    $_tgw_id_list  = $_route_list | Select-Object -ExpandProperty TransitGatewayId
 
     # CIDR list lookup for prefix lists.
     $_pl_entries_lookup = [Hashtable]::new()
@@ -195,6 +197,16 @@ function Find-Route
                 Name   = 'nat-gateway-id'
                 Values = $_ngw_id_list
             } | Group-Object -AsHashTable NatGatewayId
+        }
+
+        if ($_tgw_id_list)
+        {
+            Write-Verbose "Retrieving Transit Gateways."
+
+            $_tgw_lookup = Get-EC2TransitGateway -Verbose:$false -Filter @{
+                Name   = 'transit-gateway-id'
+                Values = $_tgw_id_list
+            } | Group-Object -AsHashTable TransitGatewayId
         }
 
         if ($_pcx_id_list)
@@ -280,6 +292,12 @@ function Find-Route
                 $_gateway_type = 'NAT Gateway'
                 $_gateway      = $_ngw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'NatGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+            }
+            'tgw-[0-9a-f]{17}'
+            {
+                $_gateway_type = 'Transit Gateway'
+                $_gateway      = $_tgw_lookup[$_target_id] | Get-ResourceString `
+                    -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
             }
             'eni-[0-9a-f]{17}'
             {

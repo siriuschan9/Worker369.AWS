@@ -118,13 +118,20 @@ function Remove-Route
 
     if ($PSCmdlet.ShouldProcess($_format_rt, "Remove route to $_dst"))
     {
-        try {
-            # Check if the gateway is a VPC Endpoint.
-            $_vpce = Get-EC2VpcEndpoint -Verbose:$false -Filter @{
-                Name   = 'vpc-endpoint-id'
-                Values = $_route.GatewayId
-            }
+        # Check if the gateway is a VPC Endpoint.
+        $_vpce = $null
 
+        if (-not [string]::IsNullOrEmpty($_route.GatewayId) -and $_route.GatewayId.StartsWith('vpce-'))
+        {
+            try {
+                $_vpce = Get-EC2VpcEndpoint -Verbose:$false -Filter @{
+                    Name = 'vpc-endpoint-id'; Values = $_route.GatewayId
+                }
+            }
+            catch { }
+        }
+
+        try {
             # If the gateway is a VPC Endpoint, we need to remove this route using Edit-EC2VpcEndpoint.
             if ($_vpce) {
                 Edit-EC2VpcEndpoint -Verbose:$false -RemoveRouteTableId $_rt.RouteTableId $_vpce.VpcEndpointId
@@ -132,7 +139,6 @@ function Remove-Route
             else {
                 Remove-EC2Route @_remove_route_params
             }
-
         } catch {
             # Remove caught exception emitted into $Error list.
             Pop-ErrorRecord $_
