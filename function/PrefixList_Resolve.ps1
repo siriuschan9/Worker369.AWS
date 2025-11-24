@@ -14,7 +14,7 @@ function Resolve-PrefixList
         $PrefixListName,
 
         [int]
-        $TargetVersion
+        $TargetVersion = [int]::MaxValue
     )
 
     BEGIN
@@ -58,7 +58,7 @@ function Resolve-PrefixList
             foreach ($_pl in $_pl_list)
             {
                 Get-EC2ManagedPrefixListEntry -Verbose:$false $_pl.PrefixListId `
-                    -TargetVersion ([int]::Max($_pl.Version, $_version))
+                    -TargetVersion ([int]::Min($_pl.Version, $_version))
                 | Select-Object -ExpandProperty Cidr
             }
         }
