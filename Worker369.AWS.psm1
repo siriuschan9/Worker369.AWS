@@ -89,8 +89,8 @@ Export-ModuleMember -Alias @(
     # Security Group Rule
     'sgr_show',
 
-    # Lambda
-    'func_show',
+    # AWS Organization
+    'org_tree'
 
     # CloudFormation
     'stack_show', 'stackinstance_show',
@@ -99,8 +99,11 @@ Export-ModuleMember -Alias @(
     # Identity Center
     'sso_assign_show', 'sso_uperm_show',
 
-    # AWS Organization
-    'org_tree'
+    # Lambda
+    'func_show',
+
+    # S3
+    's3_ls', 's3_cat'
 )
 
 # Variables

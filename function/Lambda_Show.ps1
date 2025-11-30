@@ -4,11 +4,11 @@ function Show-Lambda
     [CmdletBinding(DefaultParameterSetName = 'None')]
     param (
         [parameter(Position = 0)]
-        [ValidateSet('Default')]
+        [ValidateSet('Default', 'Logging')]
         [string]
         $View = 'Default',
 
-        [ValidateSet('Runtime', 'Type', 'Role', $null)]
+        [ValidateSet('Runtime', 'Type', 'Role', 'LogFormat', $null)]
         [string]
         $GroupBy = 'Runtime',
 
@@ -34,23 +34,38 @@ function Show-Lambda
     $_no_row_separator = $NoRowSeparator.IsPresent
 
     $_select_definition = @{
-        Name = {
-            $_.FunctionName
-        }
-        Runtime = {
-            $_.Runtime
+        ApplicationLogLevel = {
+            $_.LoggingConfig.ApplicationLogLevel
         }
         Architectures = {
             $_.Architectures -join "`n"
         }
+        LastModified = {
+            [DateTime]::Parse($_.LastModified)
+        }
+        LogFormat = {
+            $_.LoggingConfig.LogFormat
+        }
+        LogGroup = {
+            $_.LoggingConfig.LogGroup
+        }
         Memory = {
             New-NumberInfo $_.MemorySize
+        }
+        Name = {
+            $_.FunctionName
         }
         Role = {
             ($_.Role -split '/')[-1]
         }
+        Runtime = {
+            $_.Runtime
+        }
         Size = {
             New-ByteInfo -MetricSystem SI $_.CodeSize
+        }
+        SystemLogLevel = {
+            $_.LoggingConfig.SystemLogLevel
         }
         Timeout = {
             $_.Timeout
@@ -58,14 +73,14 @@ function Show-Lambda
         Type = {
             $_.PackageType
         }
-        LastModified = {
-            [DateTime]::Parse($_.LastModified)
-        }
     }
 
     $_view_definition = @{
         Default = @(
             'Name', 'Architectures', 'Runtime', 'Type', 'Role', 'Memory', 'Timeout', 'Size', 'LastModified'
+        )
+        Logging = @(
+            'Name', 'SystemLogLevel', 'ApplicationLogLevel', 'LogFormat', 'LogGroup'
         )
     }
 
