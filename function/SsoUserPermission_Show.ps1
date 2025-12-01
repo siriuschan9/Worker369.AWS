@@ -87,7 +87,7 @@ function Show-SsoUserPermission
 
             if ($_group_id)
             {
-                $_group_list = (Get-IDSGroup -IdentityStoreId $_store_id $_group_id) ?? @()
+                $_group_list = Find-IDSGroupList -Verbose:$false $_store_id | Where-Object GroupId -in $_group_id
             }
         }
 
