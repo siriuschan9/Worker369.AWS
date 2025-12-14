@@ -146,7 +146,7 @@ function Show-SecurityGroupRule
             $_.IsEgress ? 'Outbound' : 'Inbound'
         }
         FromPort = {
-            [FromPort]::new($_.ToPort, $_.IpProtocol -in @('icmp', 'icmpv6'))
+            [FromPort]::new($_.FromPort, $_.IpProtocol -in @('icmp', 'icmpv6'))
         }
         IpVersion = {
             if ($_.CidrIpv4) { 'IPv4' }

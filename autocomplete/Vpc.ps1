@@ -72,7 +72,7 @@ Register-ArgumentCompleter -ParameterName 'VpcId' -CommandName $_cmd_lookup['Vpc
 
         [System.Management.Automation.CompletionResult]::new(
             $_.ResourceId,    # completionText
-            $_ ,              # listItemText
+            $_,               # listItemText
             'ParameterValue', # resultType
             $_                # toolTip
         )
