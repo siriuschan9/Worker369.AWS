@@ -173,6 +173,9 @@ FunctionsToExport = @(
     'Show-Stack', 'Show-StackInstance',
     'Show-IacScanBrief', 'Show-IacScanDetail',
 
+    # CloudWatch Alarms
+    'New-EC2CpuAlarm', 'New-EC2StatusAlarm',
+
     # Identity Center
     'Show-SsoAssignment', 'Show-SsoUserPermission',
 

@@ -96,6 +96,9 @@ Export-ModuleMember -Alias @(
     'stack_show', 'stackinstance_show',
     'iac_scan_brief', 'iac_scan_detail',
 
+    # CloudWatch Alarms
+    'alarm_ec2_cpu', 'alarm_ec2_status',
+
     # Identity Center
     'sso_assign_show', 'sso_uperm_show',
 
