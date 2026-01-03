@@ -106,7 +106,10 @@ Export-ModuleMember -Alias @(
     'func_show',
 
     # S3
-    's3_ls', 's3_cat'
+    's3_ls', 's3_cat',
+
+    # SES
+    'ses_send'
 )
 
 # Variables

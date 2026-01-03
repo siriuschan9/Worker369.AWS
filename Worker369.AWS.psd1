@@ -56,6 +56,7 @@ PowerShellVersion = '7.2'
 RequiredModules = @(
     'Worker369.Utility',
     'AWS.Tools.Common',
+    'AWS.Tools.CloudWatch',
     'AWS.Tools.SecurityToken',
     'AWS.Tools.IdentityManagement',
     'AWS.Tools.EC2',
@@ -63,6 +64,7 @@ RequiredModules = @(
     'AWS.Tools.IdentityStore',
     'AWS.Tools.Lambda',
     'AWS.Tools.S3',
+    'AWS.Tools.SimpleEmailV2',
     'AWS.Tools.SSOAdmin',
     'AWS.Tools.Organizations'
 )
@@ -183,7 +185,10 @@ FunctionsToExport = @(
     'Show-Lambda',
 
     # S3
-    'Show-S3Folder', 'Show-S3FileContent'
+    'Show-S3Folder', 'Show-S3FileContent',
+
+    # SES
+    'Send-SesMailMessage'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry,
