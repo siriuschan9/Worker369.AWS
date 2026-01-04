@@ -110,6 +110,9 @@ Export-ModuleMember -Alias @(
 
     # SES
     'ses_send'
+
+    # EC2
+    'ec2_console'
 )
 
 # Variables

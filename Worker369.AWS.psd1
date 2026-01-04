@@ -188,7 +188,10 @@ FunctionsToExport = @(
     'Show-S3Folder', 'Show-S3FileContent',
 
     # SES
-    'Send-SesMailMessage'
+    'Send-SesMailMessage',
+
+    # EC2
+    'Get-EC2SystemLog'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry,
