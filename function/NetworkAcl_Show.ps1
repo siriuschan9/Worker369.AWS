@@ -187,3 +187,4 @@ function Show-NetworkAcl
     Sort-Object   $_sort_list    |
     Select-Object $_project_list |
     Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+}
