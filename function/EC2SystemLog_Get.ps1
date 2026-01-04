@@ -57,7 +57,7 @@ function Get-EC2SystemLog
         $_instance_list | ForEach-Object {
 
             try{
-                $_encoded = $_.InstanceId | Get-EC2ConsoleOutput | Select-Object -ExpandProperty Output
+                $_encoded = $_.InstanceId | Get-EC2ConsoleOutput -Verbose:$false | Select-Object -ExpandProperty Output
                 [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_encoded))
             }
             catch{

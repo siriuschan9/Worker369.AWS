@@ -57,6 +57,7 @@ RequiredModules = @(
     'Worker369.Utility',
     'AWS.Tools.Common',
     'AWS.Tools.CloudWatch',
+    'AWS.Tools.CloudWatchLogs',
     'AWS.Tools.SecurityToken',
     'AWS.Tools.IdentityManagement',
     'AWS.Tools.EC2',
