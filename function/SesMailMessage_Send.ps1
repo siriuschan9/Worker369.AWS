@@ -68,11 +68,14 @@ function Send-SesMailMessage
     $_raw.AppendLine("Subject: $($_subject)") | Out-Null
     $_raw.AppendLine("Content-Type: multipart/mixed; boundary=`"$($_boundary)`"") | Out-Null
     $_raw.AppendLine() | Out-Null
+    $_raw.AppendLine("--$($_boundary)") | Out-Null
+    $_raw.AppendLine("Content-Type: multipart/alternative; boundary=`"sub_$($_boundary)`"") | Out-Null
+    $_raw.AppendLine() | Out-Null
 
     # Append text.
     $_raw.AppendLine("--sub_$($_boundary)") | Out-Null
     $_raw.AppendLine("Content-Type: text/plain; charset=UTF-8") | Out-Null
-    $_raw.AppendLine("Content-Transfer-Encoding: quoted-printable") | Out-Null
+    $_raw.AppendLine("Content-Transfer-Encoding: 7bit") | Out-Null
     $_raw.AppendLine() | Out-Null
     $_raw.AppendLine($_text) | Out-Null
     $_raw.AppendLine() | Out-Null
@@ -80,7 +83,7 @@ function Send-SesMailMessage
     # Append html.
     $_raw.AppendLine("--sub_$($_boundary)") | Out-Null
     $_raw.AppendLine("Content-Type: text/html; charset=UTF-8") | Out-Null
-    $_raw.AppendLine("Content-Transfer-Encoding: quoted-printable") | Out-Null
+    $_raw.AppendLine("Content-Transfer-Encoding: 7bit") | Out-Null
     $_raw.AppendLine() | Out-Null
     $_raw.AppendLine($_html) | Out-Null
     $_raw.AppendLine() | Out-Null
@@ -125,6 +128,7 @@ function Send-SesMailMessage
     # Close boundary.
     $_raw.AppendLine("--$($_boundary)--") | Out-Null
 
+    $_raw.ToString()
     try{
         # Convert UTF string to bytes.
         $_raw_bytes = [System.Text.Encoding]::UTF8.GetBytes($_raw.ToString())
