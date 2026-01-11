@@ -115,7 +115,7 @@ function Show-SecurityGroupRule
         # Query Prefix List.
         $_pl_lookup = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
             Name = 'prefix-list-id'
-            Values = $_sgr_list.PrefixListId
+            Values = $_sgr_list.PrefixListId ?? @()
         } | Group-Object -AsHashTable PrefixListId
 
         # CIDR list lookup for prefix lists.
