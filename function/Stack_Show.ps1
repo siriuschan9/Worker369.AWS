@@ -118,7 +118,7 @@ function Show-Stack
     }
     else {
         $_output | Format-Column `
-            -GroupBy $_group_by StackStatus, DriftStatus, StatusUpdatedOn, DriftUpdatedOn `
+            -GroupBy $_group_by -AlignLeft StackStatus, DriftStatus, StatusUpdatedOn, DriftUpdatedOn `
             -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
     }
 }
