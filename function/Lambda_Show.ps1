@@ -239,10 +239,43 @@ function Show-Lambda
 
         $_tags_lookup = @{}
 
+        try{
+            foreach ($_function in $_lambda_list)
+            {
+                $_tags_lookup[$_function.FunctionArn] = Get-LMResourceTag -Verbose:$false $_function.FunctionArn
+            }
+        }
+        catch {
+            # Remove caught exception emitted into $Error list.
+            Pop-ErrorRecord $_
+
+            # Re-throw caught exception.
+            $PSCmdlet.ThrowTerminatingError($_)
+        }
+    }
+
+    if ($_view -in @('Version'))
+    {
+        Write-Verbose 'Retrieving versions'
+
+        $_versions_lookup = @{}
+
         foreach ($_function in $_lambda_list)
         {
-            Write-Verbose 'Retrieving resource tags.'
-            $_tags_lookup[$_function.FunctionArn] = Get-LMResourceTag -Verbose:$false $_function.FunctionArn
+            try{
+                foreach ($_function in $_lambda_list)
+                {
+                    $_versions_lookup[$_function.FunctionArn] = `
+                        Get-LMVersionsByFunction -Verbose:$false $_function.FunctionArn
+                }
+            }
+            catch {
+                # Remove caught exception emitted into $Error list.
+                Pop-ErrorRecord $_
+
+                # Re-throw caught exception.
+                $PSCmdlet.ThrowTerminatingError($_)
+            }
         }
     }
 

@@ -65,12 +65,12 @@ function Show-RouteTable
         AssociationId = {
             # We need to sort by Subnet to align with the items with the AssociatedSubnet column
             $_assoc_list = $_assoc_lookup_by_rt_id[$_.RouteTableId] | Sort-Object Subnet
-            $_assoc_list.RouteTableAssociationId
+            $_assoc_list.RouteTableAssociationId ?? ($_plain_text ? '-' : "`e[2m-`e[0m")
         }
         AssociatedSubnet = {
             # We need to sort by Subnet to align with the items with the AssociatedId column
             $_assoc_list = $_assoc_lookup_by_rt_id[$_.RouteTableId] | Sort-Object Subnet
-            $_assoc_list.Subnet
+            $_assoc_list.Subnet ?? ($_plain_text ? '-' : "`e[2m-`e[0m")
         }
         Blackhole = {
             $_num_blackhole = ($_.Routes | Where-Object state -eq 'blackhole').Count
@@ -284,9 +284,16 @@ function Show-RouteTable
         -Exclude          $_exclude
 
     # Print out the summary table.
-    $_rt_list                    |
-    Select-Object $_select_list  |
-    Sort-Object   $_sort_list    |
-    Select-Object $_project_list |
-    Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    $_data = `
+        $_rt_list                    |
+        Select-Object $_select_list  |
+        Sort-Object   $_sort_list    |
+        Select-Object $_project_list
+
+    if ($global:EnableHtmlOutput) {
+        $_data | Format-Html -GroupBy $_group_by | Remove-PSStyle
+    }
+    else {
+        $_data | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    }
 }

@@ -110,15 +110,22 @@ function Show-Stack
         -Exclude          $_exclude
 
     # Print out the summary table.
-    $_stack_list                 |
-    Select-Object $_select_list  |  # Initial columns based on selected view.
-    Sort-Object   $_sort_list    |  # Sort before exclude.
-    Select-Object $_project_list |  # Takes into account exclued columns.
-    Format-Column `
-        -GroupBy $_group_by `
-        -PlainText:$_plain_text `
-        -NoRowSeparator:$_no_row_separator `
-        -AlignLeft 'StackStatus', 'DriftStatus', 'StatusUpdatedOn', 'DriftUpdatedOn'
+    $_data = `
+        $_stack_list                 |
+        Select-Object $_select_list  |  # Initial columns based on selected view.
+        Sort-Object   $_sort_list    |  # Sort before exclude.
+        Select-Object $_project_list    # Takes into account exclued columns.
+
+    if ($global:EnableHtmlOutput) {
+        $_data | Format-Html -GroupBy $_group_by | Remove-PSStyle
+    }
+    else {
+        $_data | Format-Column `
+            -GroupBy $_group_by `
+            -PlainText:$_plain_text `
+            -NoRowSeparator:$_no_row_separator `
+            -AlignLeft 'StackStatus', 'DriftStatus', 'StatusUpdatedOn', 'DriftUpdatedOn'
+    }
 }
 <#
 Capabilities                : {CAPABILITY_NAMED_IAM}

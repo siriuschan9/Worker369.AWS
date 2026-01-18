@@ -80,12 +80,16 @@ function Send-SesMailMessage
     $_raw.AppendLine($_text) | Out-Null
     $_raw.AppendLine() | Out-Null
 
+    # Base64 html.
+    $_html_in_bytes  = [System.Text.Encoding]::UTF8.GetBytes($_html)
+    $_html_in_base64 = [Convert]::ToBase64String($_html_in_bytes)
+
     # Append html.
     $_raw.AppendLine("--sub_$($_boundary)") | Out-Null
     $_raw.AppendLine("Content-Type: text/html; charset=UTF-8") | Out-Null
-    $_raw.AppendLine("Content-Transfer-Encoding: 7bit") | Out-Null
+    $_raw.AppendLine("Content-Transfer-Encoding: base64") | Out-Null
     $_raw.AppendLine() | Out-Null
-    $_raw.AppendLine($_html) | Out-Null
+    $_raw.AppendLine($_html_in_base64) | Out-Null
     $_raw.AppendLine() | Out-Null
 
     # Close sub boundary.

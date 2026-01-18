@@ -118,3 +118,7 @@ Export-ModuleMember -Alias @(
 # Variables
 Export-ModuleMember -Variable 'ResourceStringPreference'
 Export-ModuleMember -Variable 'DefaultRouteTable'
+
+[bool]$EnableHtmlOutput = $false
+$EnableHtmlOutput | Out-Null
+Export-ModuleMember -Variable 'EnableHtmlOutput'
