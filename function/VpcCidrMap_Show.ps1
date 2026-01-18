@@ -245,11 +245,13 @@ function Show-VpcCidrMap
         }
 
         # Print out the Cidr Maps - This is a list of Cidr Nodes grouped by the VPC CIDR block.
-        $_results | Format-Column `
-            -PlainText:$_plain_text `
-            -NoRowSeparator:$_no_rows_separator `
-            -GroupBy VpcCidr `
-            -AlignLeft 'Allocated' `
-            -AlignRight 'PrefixLength'
+        if ($global:EnableHtmlOutput) {
+            $_results | Format-Html -GroupBy VpcCidr | Remove-PSStyle
+        }
+        else {
+            $_results | Format-Column `
+                -GroupBy VpcCidr -AlignLeft Allocated -AlignRight PrefixLength `
+                -PlainText:$_plain_text -NoRowSeparator:$_no_rows_separator `
+        }
     }
 }

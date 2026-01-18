@@ -288,14 +288,18 @@ function Show-Lambda
         -Sort             $_sort `
         -Exclude          $_exclude
 
-    # Print out the summary table.
-    $_lambda_list                |
-    Select-Object $_select_list  |
-    Sort-Object   $_sort_list    |
-    Select-Object $_project_list |
-    Where-Object  $_where        |
-    Format-Column `
-        -GroupBy $_group_by `
-        -PlainText:$_plain_text `
-        -NoRowSeparator:$_no_row_separator
+    # Generate output after sorting and exclusion.
+    $_output = $_lambda_list `
+        | Select-Object $_select_list `
+        | Sort-Object $_sort_list `
+        | Select-Object $_project_list `
+        | Where-Object $_where
+
+    # Print out the output.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+    }
+    else {
+        $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    }
 }

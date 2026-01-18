@@ -260,14 +260,16 @@ function Show-S3Folder
         }
     }
 
-    # Print out the folder listing.
-    $_item_list                  |
-    Select-Object $_select_list  |
-    Sort-Object   $_sort_list    |
-    Select-Object $_project_list |
-    Format-Column `
-        -GroupBy $_group_by `
-        -AlignRight 'LastModified', 'Size' `
-        -PlainText:$_plain_text `
-        -NoRowSeparator:$_no_row_separator
+    # Generate output after sorting and exclusion.
+    $_output = $_item_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+
+    # Print out the output.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+    }
+    else {
+        $_output | Format-Column `
+            -GroupBy $_group_by -AlignRight LastModified, Size `
+            -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    }
 }

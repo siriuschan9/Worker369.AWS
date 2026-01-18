@@ -95,13 +95,16 @@ function Show-IacScanDetail
         -Sort             $_sort `
         -Exclude          $_exclude
 
-    $_resource_list              |
-    Select-Object $_select_list  |
-    Sort-Object   $_sort_list    |
-    Select-Object $_project_list |
-    Format-Column `
-        -GroupBy $_group_by `
-        -AlignLeft 'ManagedByStack' `
-        -PlainText:$_plain_text `
-        -NoRowSeparator:$_no_row_separator
+    # Generate output after sorting and exclusion.
+    $_output = $_resource_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+
+    # Print out the output.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+    }
+    else {
+        $_output | Format-Column `
+            -GroupBy $_group_by -AlignLeft ManagedByStack `
+            -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    }
 }

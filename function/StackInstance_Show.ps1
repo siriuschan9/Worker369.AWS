@@ -146,19 +146,20 @@ function Show-StackInstance
         -Sort             $_sort `
         -Exclude          $_exclude
 
-    # Print out the summary table.
-    $_si_list                    |
-    Select-Object $_select_list  |  # Initial columns based on selected view.
-    Sort-Object   $_sort_list    |  # Sort before exclude.
-    Select-Object $_project_list |  # Takes into account exclued columns.
-    Format-Column `
-        -GroupBy $_group_by `
-        -PlainText:$_plain_text `
-        -NoRowSeparator:$_no_row_separator `
-        -AlignLeft 'DetailedStatus', 'DriftStatus', 'DriftUpdatedOn'
+    # Generate output after sorting and exclusion.
+    $_output = $_si_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+
+    # Print out the output.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+    }
+    else {
+        $_output | Format-Column `
+            -GroupBy $_group_by -AlignLeft DetailedStatus, DriftStatus, DriftUpdatedOn `
+            -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    }
 }
 
 <#
 'arn:aws:cloudformation:ap-southeast-1:051826723662:stack/StackSet-StateChangeAlert-132f9a7c-8f77-4265-8cd2-5d5c7421208a/e48c02a0-af54-11f0-b533-0a5966eca78d' -replace 'arn:aws:cloudformation:.+:\d{12}:stack\/' -replace '\/[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}'
-
 #>
