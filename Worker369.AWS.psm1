@@ -90,10 +90,10 @@ Export-ModuleMember -Alias @(
     'sgr_show',
 
     # AWS Organization
-    'org_tree'
+    'org_tree',
 
     # CloudFormation
-    'stack_show', 'stackinstance_show',
+    'stack_show', 'stack_instance_show', 'stack_resource_show',
     'iac_scan_brief', 'iac_scan_detail',
 
     # CloudWatch Alarms
@@ -109,7 +109,7 @@ Export-ModuleMember -Alias @(
     's3_ls', 's3_cat',
 
     # SES
-    'ses_send'
+    'ses_send',
 
     # EC2
     'ec2_console'

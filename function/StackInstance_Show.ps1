@@ -4,7 +4,7 @@ using namespace Amazon.CloudFormation
 function Show-StackInstance
 {
     [CmdletBinding(DefaultParameterSetName = 'None')]
-    [Alias('stackinstance_show')]
+    [Alias('stack_instance_show')]
     param (
         [Parameter(Position = 0)]
         [ValidateSet('Default')]

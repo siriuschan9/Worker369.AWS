@@ -29,6 +29,7 @@ function New-NetworkAcl
 
     PROCESS
     {
+        # Use snake_case.
         $_vpc_id   = $VpcId
         $_vpc_name = $VpcName
         $_name     = $Name

@@ -8,6 +8,10 @@ $_cmd_lookup = @{
     StackSetName = @(
         'Show-StackInstance'
     )
+
+    StackName = @(
+        'Show-StackResource'
+    )
 }
 
 Register-ArgumentCompleter -ParameterName 'CallAs' -CommandName $_cmd_lookup['CallAs'] -ScriptBlock {
@@ -46,6 +50,27 @@ Register-ArgumentCompleter -ParameterName 'StackSetName' -CommandName $_cmd_look
 
     Get-CFNStackSetList -CallAs $_call_as -Select Summaries.StackSetName -Status ACTIVE |
     Where-Object { $_ -like "$_word_to_complete*" } | ForEach-Object {
+
+        [System.Management.Automation.CompletionResult]::new(
+            $_,               # completionText
+            $_,               # listItemText
+            'ParameterValue', # resultType
+            $_                # toolTip
+        )
+    }
+}
+
+Register-ArgumentCompleter -ParameterName 'StackName' -CommandName $_cmd_lookup['StackName'] -ScriptBlock {
+
+    param(
+        $_command_name,
+        $_parameter_name,
+        $_word_to_complete,
+        $_command_ast,
+        $_fake_bound_parameters
+    )
+
+    Get-CFNStack -Select Stacks.StackName | Where-Object { $_ -like "$_word_to_complete*" } | ForEach-Object {
 
         [System.Management.Automation.CompletionResult]::new(
             $_,               # completionText
