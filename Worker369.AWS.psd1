@@ -173,7 +173,7 @@ FunctionsToExport = @(
     'Show-OrgTree'
 
     # CloudFormation
-    'Show-Stack', 'Show-StackInstance', 'Show-StackResource',
+    'Show-Stack', 'Show-StackDrift', 'Show-StackInstance', 'Show-StackResource',
     'Show-IacScanBrief', 'Show-IacScanDetail',
 
     # CloudWatch Alarms

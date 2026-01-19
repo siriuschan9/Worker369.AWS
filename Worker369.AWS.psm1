@@ -93,7 +93,7 @@ Export-ModuleMember -Alias @(
     'org_tree',
 
     # CloudFormation
-    'stack_show', 'stack_instance_show', 'stack_resource_show',
+    'stack_show', 'stack_drift_show', 'stack_instance_show', 'stack_resource_show',
     'iac_scan_brief', 'iac_scan_detail',
 
     # CloudWatch Alarms

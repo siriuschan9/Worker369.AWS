@@ -10,7 +10,7 @@ $_cmd_lookup = @{
     )
 
     StackName = @(
-        'Show-StackResource'
+        'Show-StackResource', 'Show-StackDrift'
     )
 }
 
