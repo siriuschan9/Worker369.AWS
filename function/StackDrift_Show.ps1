@@ -67,18 +67,11 @@ function Show-StackDrift
         )
     }
 
+    $_drift_list = [System.Collections.Generic.List[PSObject]]::new()
+
     try {
-        $_drifted_resource_list = Get-CFNStackResourceList -Verbose:$false $_stack_name | Where-Object {
+        $_resource_list = Get-CFNStackResourceList -Verbose:$false $_stack_name | Where-Object {
             $_.DriftInformation.StackResourceDriftStatus -ne 'IN_SYNC'
-        } | ForEach-Object {
-            $_logical_resource_id = $_.LogicalResourceId
-            Write-Message -Progress $_cmdlet_name "Retrieving stack resource $($_logical_resource_id)."
-            Get-CFNStackResourceDrift -Verbose:$false `
-                -LogicalResourceId $_.LogicalResourceId $_stack_name |
-            Select-Object -ExpandProperty PropertyDifferences | ForEach-Object {
-                $_ | Add-Member 'LogicalResourceId' $_logical_resource_id
-                $_
-            }
         }
     }
     catch {
@@ -89,8 +82,34 @@ function Show-StackDrift
         $PSCmdlet.ThrowTerminatingError($_)
     }
 
+    # Exit early if there are no stack resources.
+    if (-not $_resource_list) {
+        return
+    }
+
+    $_resource_list | ForEach-Object {
+        $_logical_resource_id = $_.LogicalResourceId
+        Write-Message -Progress $_cmdlet_name "Retrieving stack resource $($_logical_resource_id)."
+
+        try{
+            Get-CFNStackResourceDrift -Verbose:$false -LogicalResourceId $_.LogicalResourceId $_stack_name |
+            Select-Object -ExpandProperty PropertyDifferences | ForEach-Object {
+                $_ | Add-Member 'LogicalResourceId' $_logical_resource_id
+                $_drift_list.Add($_)
+            }
+        }
+        catch {
+            # Remove caught exception emitted into $Error list.
+            Pop-ErrorRecord $_
+
+            # Print verbose message.
+            Write-Verbose $_.Exception.Message
+        }
+    }
+
+
     # Exit early if there are no drifted resources.
-    if (-not $_drifted_resource_list) {
+    if ($_drift_list.Count -eq 0) {
         return
     }
 
@@ -113,7 +132,7 @@ function Show-StackDrift
 
     # Generate output after sorting and exclusion.
     $_output = `
-        $_drifted_resource_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+        $_drift_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
 
     # Print out the output.
     if ($global:EnableHtmlOutput) {
