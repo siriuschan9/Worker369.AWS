@@ -1,0 +1,1 @@
+Add-Type -Path $PSScriptRoot/HintItem.cs
