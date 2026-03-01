@@ -7,11 +7,12 @@ function Show-KmsKey
         [Parameter()]
         [ValidateSet('ALL', 'AWS', 'CUSTOMER')]
         [string]
-        $KeyManager = 'ALL',
+        $KeyManager = 'CUSTOMER',
 
-        [ValidateSet('Default')]
+        [Parameter(Position = 0)]
+        [ValidateSet('General', 'KeySpec', 'Status')]
         [string]
-        $View = 'Default',
+        $View = 'General',
 
         [ValidateSet('KeyManager', 'KeyType', 'KeyState', 'KeyUsage', 'Regionality')]
         [string]
@@ -30,10 +31,6 @@ function Show-KmsKey
         $NoRowSeparator
     )
 
-    # For easy pickup.
-    $_dim       = [System.Management.Automation.PSStyle]::Instance.Dim
-    $_reset     = [System.Management.Automation.PSStyle]::Instance.Reset
-
     # Use snake_case.
     $_view               = $View
     $_group_by           = $GroupBy
@@ -50,83 +47,52 @@ function Show-KmsKey
     }
 
     $_select_definition = @{
-        KeyManager = {
-            $_key_manager = $_.KeyManager
-            $_enabled     = $_enabled_lookup[$_.KeyId]
-
-            $_enabled -or $_plain_text -or $_group_by -eq 'KeyManager' `
-                ? "$($_key_manager)"
-                : "$($_dim)$($_key_manager)$($_reset)"
+        CreationDate = {
+            $_.CreationDate
+        }
+        DeletionDate = {
+            $_.DeletionDate
+        }
+        Description = {
+            $_.Description
+        }
+        KeyAlias = {
+            $_alias_lookup[$_.KeyId]
         }
         KeyId = {
-            $_key_id  = $_.KeyId
-            $_enabled = $_enabled_lookup[$_key_id]
-
-            $_enabled -or $_plain_text  `
-                ? "$($_key_id)"
-                : "$($_dim)$($_key_id)$($_reset)"
+            $_.KeyId
+        }
+        KeyManager = {
+            $_.KeyManager
         }
         KeyState = {
             $_key_state = $_.KeyState
             $_checked   = $_key_state -eq 'Enabled'
-
             New-Checkbox -PlainText:$_plain_text -Description $_key_state $_checked
         }
-        KeyType = {
-            $_key_type = $_.KeySpec -eq 'SYMMETRIC_DEFAULT' ? 'Symmetric' : 'Asymmetric'
-            $_enabled  = $_enabled_lookup[$_.KeyId]
-
-            $_enabled -or $_plain_text -or $_group_by -eq 'KeyType' `
-                ? "$($_key_type)"
-                : "$($_dim)$($_key_type)$($_reset)"
-        }
         KeySpec = {
-            $_key_spec = $_.KeySpec
-            $_enabled  = $_enabled_lookup[$_.KeyId]
-
-            $_enabled -or $_plain_text `
-                ? "$($_key_spec)"
-                : "$($_dim)$($_key_spec)$($_reset)"
+            $_.KeySpec
+        }
+        KeyType = {
+            $_.KeySpec -eq 'SYMMETRIC_DEFAULT' ? 'Symmetric' : 'Asymmetric'
         }
         KeyUsage  = {
-            $_key_usage = $_.KeyUsage
-            $_enabled   = $_enabled_lookup[$_.KeyId]
-
-            $_enabled -or $_plain_text -or $_group_by -eq 'KeyUsage' `
-                ? "$($_key_usage)"
-                : "$($_dim)$($_key_usage)$($_reset)"
+            $_.KeyUsage
         }
         Regionality = {
-            $_regionality = $_.MultiRegion ? 'Multi Region' : 'Single Region'
-            $_enabled     = $_enabled_lookup[$_.KeyId]
-
-            $_enabled -or $_plain_text -or $_group_by -eq 'Regionality' `
-                ? "$($_regionality)"
-                : "$($_dim)$($_regionality)$($_reset)"
-        }
-        KeyAlias = {
-            $_key_alias = $_alias_lookup[$_.KeyId]
-            $_enabled   = $_enabled_lookup[$_.KeyId]
-
-            $_map = $_enabled -or $_plain_text `
-                ? { "$($_)" }
-                : { "$($_dim)$($_)$($_dim)" }
-            $_key_alias | ForEach-Object $_map
-        }
-        CreationDate = {
-            $_creation_date = $_.CreationDate
-            $_enabled       = $_enabled_lookup[$_.KeyId]
-
-            $_enabled -or $_plain_text `
-                ? "$($_creation_date)"
-                : "$($_dim)$($_creation_date)$($_reset)"
+            $_.MultiRegion ? 'Multi Region' : 'Single Region'
         }
     }
 
     $_view_definition = @{
-        'Default' = @(
-            'KeyManager', 'KeyId', 'KeyState', 'KeyType', 'KeySpec', 'KeyUsage',
-            'Regionality', 'KeyAlias', 'CreationDate'
+        'General' = @(
+            'KeyManager', 'KeyState', 'KeyId', 'KeyAlias', 'KeyType', 'Description', 'CreationDate'
+        )
+        'KeySpec' = @(
+            'KeyManager', 'KeyState', 'KeyId', 'KeyAlias', 'KeyType', 'KeySpec', 'KeyUsage', 'Regionality'
+        )
+        'Status' = @(
+            'KeyManager', 'KeyState', 'KeyId', 'KeyAlias', 'CreationDate', 'DeletionDate'
         )
     }
 
@@ -165,6 +131,7 @@ function Show-KmsKey
 
     # Apply default sort order.
     if ($_group_by -eq 'KeyManager' -and
+        $_view -eq 'General' -and
         -not $PSBoundParameters.Keys.Contains('Exclude') -and
         -not $PSBoundParameters.Keys.Contains('Sort')
     ) {
