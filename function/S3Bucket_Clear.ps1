@@ -43,14 +43,16 @@ function Clear-S3Bucket
             # Display What-If/Confirmation prompt.
             if ($PSCmdlet.ShouldProcess($_.BucketArn, 'Empty S3 Bucket'))
             {
+                $_counter = 0
                 try {
                     do {
-                        $_response = Get-S3Version -Verbose:$false $_bucket_name
-                        $_versions = $_response.Versions
-                        $_counter  = $_versions.Count
+                        $_response  = Get-S3Version -Verbose:$false $_bucket_name
+                        $_versions  = $_response.Versions
+                        $_counter  += $_versions.Count
 
-                        Remove-S3Object -Verbose:$false -Confirm:$false -InputObject $_response.Versions | Out-Null
-
+                        if ($_versions) {
+                            Remove-S3Object -Verbose:$false -Confirm:$false -InputObject $_versions | Out-Null
+                        }
                         Write-Host -NoNewline "`r"
                         Write-host -NoNewline "$($_counter) object versions deleted."
                     } while ($_response.KeyMarker)
