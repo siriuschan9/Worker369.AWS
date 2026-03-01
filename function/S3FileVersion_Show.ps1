@@ -28,6 +28,10 @@ function Show-S3FileVersion
         $ShowRowSeparator
     )
 
+    $_dim   = [System.Management.Automation.PSStyle]::Instance.Dim
+    $_reset = [System.Management.Automation.PSStyle]::Instance.Reset
+
+    # Use snake_case.
     $_bucket_name      = $BucketName
     $_folder           = $Folder
     $_group_by         = $GroupBy
@@ -90,6 +94,51 @@ function Show-S3FileVersion
         }
     }
 
+    # We use a separate project definition because we want to dimming rows in select definition affect the sorting.
+    $_project_definition = @{
+        IsDeleteMarker = {
+            $_.IsDeleteMarker
+        }
+        IsLatest = {
+            $_.IsLatest
+        }
+        LastModified = {
+            $_value     = $_.LastModified
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'LastModified'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+        Location = {
+            $_value     = $_.Location
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'Location'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+        Name = {
+            $_value     = $_.Name
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'Name'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+        Size = {
+            $_value     = $_.Size
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'Size'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+        StorageClass = {
+            $_value     = $_.StorageClass
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'StorageClass'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+        Uri = {
+            $_value     = $_.Uri
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'Uri'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+        VersionId = {
+            $_value     = $_.VersionId
+            $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'VersionId'
+            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+        }
+    }
+
     # Apply default sort order.
     if (
         -not $PSBoundParameters.Keys.Contains('GroupBy') -and
@@ -110,8 +159,16 @@ function Show-S3FileVersion
         -Sort             $_sort `
         -Exclude          $_exclude
 
+    $_project_list_extended = $_project_list | ForEach-Object {
+        @{
+            Name       = "$_"
+            Expression = $_project_definition[$_]
+        }
+    }
+
     # Generate output after sorting and exclusion.
-    $_output = $_version_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = `
+        $_version_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list_extended
 
     # Print out the output.
     if ($global:EnableHtmlOutput) {

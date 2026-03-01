@@ -124,8 +124,8 @@ function Show-S3Bucket
         EncryptionKey = {
             $_encryption_rule = $_encryption_lookup[$_.BucketName]
 
-            $_encryption_rule.ServerSideEncryptionByDefault.ServerSideEncryptionKeyManagementServiceKeyId ?? `
-                $_plain_text ? '-' : "$($_dim)-$($_reset)"
+            $_encryption_rule.ServerSideEncryptionByDefault.ServerSideEncryptionKeyManagementServiceKeyId `
+                ?? ($_plain_text ? '-' : "$($_dim)-$($_reset)")
         }
         HasBucketPolicy = {
             New-Checkbox -PlainText:$_plain_text ($_has_bucket_policy_lookup[$_.BucketName] ?? $false)

@@ -115,6 +115,7 @@ Export-ModuleMember -Alias @(
     's3_ls', 's3_cat', 's3_ver',
     's3_show', 's3_policy_show',
     's3_get',
+    's3_clear',
     's3_ver_en', 's3_ver_dis',
     's3_bkey_en', 's3_bkey_dis',
     's3_encrypt',
