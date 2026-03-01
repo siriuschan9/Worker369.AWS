@@ -195,7 +195,7 @@ FunctionsToExport = @(
     'Show-S3Folder', 'Show-S3FileContent', 'Show-S3FileVersion',
     'Get-S3File',
     'Show-S3Bucket', 'Show-S3Policy',
-    'ClearS3Bucket',
+    'Clear-S3Bucket',
     'Enable-S3Versioning', 'Disable-S3Versioning',
     'Enable-S3BucketKey', 'Disable-S3BucketKey',
     'Set-S3Encryption',
