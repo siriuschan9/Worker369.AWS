@@ -61,34 +61,3 @@ function Convert-IamPolicy
         $_results | Format-Column -GroupBy Effect
     }
 }
-
-<#
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "TlsRequestsOnly",
-            "Effect": "Deny",
-            "Principal": "*",
-            "Action": "s3:*",
-            "Resource": [
-                "arn:aws:s3:::369-s3-z-work-all-accrvw-051826723662-01/*",
-                "arn:aws:s3:::369-s3-z-work-all-accrvw-051826723662-01"
-            ],
-            "Condition": {
-                "Bool": {
-                    "aws:SecureTransport": "false"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::051826723662:role/DefaultEC2InstanceRole"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::369-s3-z-work-all-accrvw-051826723662-01/*"
-        }
-    ]
-}
-#>
