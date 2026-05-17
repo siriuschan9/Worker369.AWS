@@ -190,7 +190,7 @@ FunctionsToExport = @(
     'Show-Lambda',
 
     # KMS,
-    'Show-KmsKey'
+    'Show-KmsKey',
 
     # S3
     'Show-S3Folder', 'Show-S3FileContent', 'Show-S3FileVersion',
