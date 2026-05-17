@@ -180,7 +180,8 @@ FunctionsToExport = @(
     'New-EC2CpuAlarm', 'New-EC2StatusAlarm',
 
     # IAM,
-    'Show-IamRoleTrustPolicy',
+    'Show-IamRole', 'Show-IamRoleTrustPolicy',
+    'Find-IamPolicy', 'Read-IamPolicyDocument',
 
     # Identity Center
     'Show-SsoAssignment', 'Show-SsoUserPermission',

@@ -100,7 +100,8 @@ Export-ModuleMember -Alias @(
     'alarm_ec2_cpu', 'alarm_ec2_status',
 
     # IAM,
-    'role_trust_show',
+    'iam_role_show', 'iam_role_trust_show',
+    'iam_policy_find', 'iam_policy_doc_read',
 
     # Identity Center
     'sso_assign_show', 'sso_uperm_show',
@@ -128,10 +129,21 @@ Export-ModuleMember -Alias @(
     'ec2_console'
 )
 
-# Variables
+# Id | IdAndName | Name
 Export-ModuleMember -Variable 'ResourceStringPreference'
+
+# Default Route Table To Work On When Using route_show
 Export-ModuleMember -Variable 'DefaultRouteTable'
 
+# On/Off HTML Output
 [bool]$EnableHtmlOutput = $false
 $EnableHtmlOutput | Out-Null
 Export-ModuleMember -Variable 'EnableHtmlOutput'
+
+# Caches For IAM Policy ARNs
+[string[]]$IamPolicyCache_Local = $null
+[string[]]$IamPolicyCache_AWS   = $null
+$IamPolicyCache_Local | Out-Null
+$IamPolicyCache_AWS   | Out-Null
+Export-ModuleMember -Variable 'IamPolicyCache_Local'
+Export-ModuleMember -Variable 'IamPolicyCache_AWS'

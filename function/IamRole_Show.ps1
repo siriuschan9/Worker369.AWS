@@ -1,6 +1,6 @@
 function Show-IamRole
 {
-    [Alias('role_show')]
+    [Alias('iam_role_show')]
     [CmdletBinding()]
     param (
         [Parameter(Position = 0)]
@@ -118,8 +118,17 @@ function Show-IamRole
         $_role_list = Get-IAMRoleList -Verbose:$false
 
         if ($_view -eq 'Usage') {
+            $_num_roles = $_role_list.Length
+            $_complete  = 0
             foreach ($_role in $_role_list) {
                 $_role.RoleLastUsed = (Get-IAMRole -Verbose:$false -Select Role.RoleLastUsed $_role.RoleName)
+
+                $_complete++
+                $_percent_complete = ($_complete / $_num_roles) * 100
+                Write-Progress `
+                    -PercentComplete $_percent_complete `
+                    -Activity 'Collecting Role Last Used Info' `
+                    -Status "Current Role: $($_role.RoleName)"
             }
         }
     }

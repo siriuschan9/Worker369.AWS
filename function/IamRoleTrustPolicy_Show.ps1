@@ -1,6 +1,6 @@
 function Show-IamRoleTrustPolicy
 {
-    [Alias('role_trust_show')]
+    [Alias('iam_role_trust_show')]
     [CmdletBinding()]
     param (
         [Parameter(Position = 0, Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
