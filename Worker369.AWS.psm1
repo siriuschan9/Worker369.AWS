@@ -101,7 +101,7 @@ Export-ModuleMember -Alias @(
 
     # IAM,
     'iam_role_show', 'iam_role_trust_show',
-    'iam_policy_find', 'iam_policy_doc_read',
+    'iam_policy_find', 'iam_policy_read', 'iam_policy_cat',
 
     # Identity Center
     'sso_assign_show', 'sso_uperm_show',
@@ -141,8 +141,8 @@ $EnableHtmlOutput | Out-Null
 Export-ModuleMember -Variable 'EnableHtmlOutput'
 
 # Caches For IAM Policy ARNs
-[string[]]$IamPolicyCache_Local = $null
-[string[]]$IamPolicyCache_AWS   = $null
+[string[]]$IamPolicyCache_Local = @()
+[string[]]$IamPolicyCache_AWS   = @()
 $IamPolicyCache_Local | Out-Null
 $IamPolicyCache_AWS   | Out-Null
 Export-ModuleMember -Variable 'IamPolicyCache_Local'

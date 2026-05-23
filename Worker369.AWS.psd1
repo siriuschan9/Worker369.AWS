@@ -181,7 +181,7 @@ FunctionsToExport = @(
 
     # IAM,
     'Show-IamRole', 'Show-IamRoleTrustPolicy',
-    'Find-IamPolicy', 'Read-IamPolicyDocument',
+    'Find-IamPolicy', 'Read-IamPolicyDocument', 'Show-IamPolicyContent',
 
     # Identity Center
     'Show-SsoAssignment', 'Show-SsoUserPermission',

@@ -1,7 +1,7 @@
 function Read-IamPolicyDocument
 {
     [CmdletBinding()]
-    [Alias('iam_policy_doc_read')]
+    [Alias('iam_policy_read')]
     param (
         [Parameter(ValueFromPipeline, Position = 0)]
         [string]
@@ -10,7 +10,7 @@ function Read-IamPolicyDocument
 
     BEGIN
     {
-        $_not     = $PSStyle.Formatting.Error
+        $_not     = $PSStyle.Formatting.Error          # Formatting for NotAction, NotResource
         $_bracket = $PSStyle.Dim
         $_reset   = $PSStyle.Reset
         $_func    = $PSStyle.Formatting.Warning
@@ -27,16 +27,16 @@ function Read-IamPolicyDocument
 
         $_results = foreach ($_statement in $_policy_obj.Statement)
         {
-            $_effect        = $_statement.Effect ?? 'Allow'
-            $_condition     = $_statement.Condition
+            $_effect       = $_statement.Effect ?? 'Allow'
+            $_condition    = $_statement.Condition
 
-            $_action        = $_statement.Action    | Sort-Object
-            $_not_action    = $_statement.NotAction | Sort-Object | Foreach-Object {
+            $_action       = $_statement.Action    | Sort-Object
+            $_not_action   = $_statement.NotAction | Sort-Object | Foreach-Object {
                 "$($_not)$($_)$($_reset)"
             }
 
-            $_resource      = $_statement.Resource    | Where-Object {$null -ne $_} | Sort-Object
-            $_not_resource  = $_statement.NotResource | Where-Object {$null -ne $_} | Sort-Object | ForEach-Object {
+            $_resource     = $_statement.Resource    | Where-Object {$null -ne $_} | Sort-Object
+            $_not_resource = $_statement.NotResource | Where-Object {$null -ne $_} | Sort-Object | ForEach-Object {
                 "$($_not)$($_)$($_reset)"
             }
 
