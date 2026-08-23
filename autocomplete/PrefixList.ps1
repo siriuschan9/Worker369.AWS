@@ -23,23 +23,23 @@ Register-ArgumentCompleter -ParameterName 'PrefixListId' -CommandName $_cmd_look
         $_fake_bound_parameters
     )
 
-        $_dim   = [System.Management.Automation.PSStyle]::Instance.Dim
-        $_reset = [System.Management.Automation.PSStyle]::Instance.Reset
+    $_dim   = [System.Management.Automation.PSStyle]::Instance.Dim
+    $_reset = [System.Management.Automation.PSStyle]::Instance.Reset
 
-        Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
-            Name   = 'prefix-list-id'
-            Values = "$_word_to_complete*"
-        } |
-        Sort-Object PrefixListName | ForEach-Object {
+    Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
+        Name   = 'prefix-list-id'
+        Values = "$_word_to_complete*"
+    } |
+    Sort-Object PrefixListName | ForEach-Object {
 
-            $_display_item = '{0,-20} {1}' -f $_.PrefixListId, "$_dim| $($_.PrefixListName)$_reset"
+        $_display_item = '{0,-20} {1}' -f $_.PrefixListId, "$_dim| $($_.PrefixListName)$_reset"
 
-            [System.Management.Automation.CompletionResult]::new(
-                $_.PrefixListId,  # completionText
-                $_display_item,   # listItemText
-                'ParameterValue', # resultType
-                $_display_item    # toolTip
-            )
+        [System.Management.Automation.CompletionResult]::new(
+            $_.PrefixListId,  # completionText
+            $_display_item,   # listItemText
+            'ParameterValue', # resultType
+            $_display_item    # toolTip
+        )
     }
 }
 

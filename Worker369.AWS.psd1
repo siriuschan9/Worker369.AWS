@@ -56,6 +56,7 @@ PowerShellVersion = '7.2'
 RequiredModules = @(
     'Worker369.Utility',
     'AWS.Tools.Common',
+    'AWS.Tools.CloudFormation',
     'AWS.Tools.CloudWatch',
     'AWS.Tools.CloudWatchLogs',
     'AWS.Tools.SecurityToken',
@@ -64,10 +65,12 @@ RequiredModules = @(
     'AWS.Tools.CloudFormation',
     'AWS.Tools.IdentityStore',
     'AWS.Tools.Lambda',
+    'AWS.Tools.Organizations',
+    'AWS.Tools.Route53',
     'AWS.Tools.S3',
     'AWS.Tools.SimpleEmailV2',
-    'AWS.Tools.SSOAdmin',
-    'AWS.Tools.Organizations'
+    'AWS.Tools.SecurityToken',
+    'AWS.Tools.SSOAdmin'
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -143,6 +146,9 @@ FunctionsToExport = @(
     'Enable-SubnetAutoAssignIPv6',     'Disable-SubnetAutoAssignIPv6',
     'Enable-SubnetDns64',              'Disable-SubnetDns64',
     'Set-SubnetHostnameType',
+
+    # Route 53
+    'Show-Route53Dns',
 
     # Route Table
     'Show-RouteTable', 'New-RouteTable', 'Rename-RouteTable', 'Remove-RouteTable',

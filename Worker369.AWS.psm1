@@ -64,6 +64,9 @@ Export-ModuleMember -Alias @(
     'subnet_dns64_en', 'subnet_dns64_dis',
     'subnet_host',
 
+    # Route 53
+    'dns_show',
+
     # Route Table
     'rt_show', 'rt_add', 'rt_rn', 'rt_rm',
 

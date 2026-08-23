@@ -171,6 +171,8 @@ function Show-Route
                 Name   = 'internet-gateway-id'
                 Values = $_igw_id_list
             } | Group-Object -AsHashTable InternetGatewayId
+
+        $_igw_lookup = $_igw_lookup ?? @{}
         }
 
         if ($_vpce_id_list)
@@ -181,6 +183,8 @@ function Show-Route
                 Name   = 'vpc-endpoint-id'
                 Values = $_vpce_id_list
             } | Group-Object -AsHashTable VpcEndpointId
+
+            $_vpce_id_lookup = $_vpce_id_lookup ?? @{}
         }
 
         if ($_ngw_id_list)
@@ -191,6 +195,8 @@ function Show-Route
                 Name   = 'nat-gateway-id'
                 Values = $_ngw_id_list
             } | Group-Object -AsHashTable NatGatewayId
+
+            $_ngw_lookup = $_ngw_lookup ?? @{}
         }
 
         if ($_tgw_id_list)
@@ -201,6 +207,8 @@ function Show-Route
                 Name   = 'transit-gateway-id'
                 Values = $_tgw_id_list
             } | Group-Object -AsHashTable TransitGatewayId
+
+            $_tgw_lookup = $_tgw_lookup ?? @{}
         }
 
         if ($_pcx_id_list)
@@ -211,6 +219,8 @@ function Show-Route
                 Name   = 'vpc-peering-connection-id'
                 Values = $_pcx_id_list
             } | Group-Object -AsHashTable VpcPeeringConnectionId
+
+            $_pcx_lookup = $_pcx_lookup ?? @{}
         }
 
         if ($_eni_id_list)
@@ -221,6 +231,8 @@ function Show-Route
                 Name   = 'network-interface-id'
                 Values = $_eni_id_list
             } | Group-Object -AsHashTable NetworkInterfaceId
+
+            $_eni_lookup = $_eni_lookup ?? @{}
         }
     }
     catch {
@@ -272,36 +284,42 @@ function Show-Route
                 $_gateway_type = 'Internet Gateway'
                 $_gateway      = $_igw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'InternetGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'vpce-[0-9a-f]{17}'
             {
                 $_gateway_type = 'VPC Endpoint'
                 $_gateway      = $_vpce_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'VpcEndpointId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'nat-[0-9a-f]{17}'
             {
                 $_gateway_type = 'NAT Gateway'
                 $_gateway      = $_ngw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'NatGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'tgw-[0-9a-f]{17}'
             {
                 $_gateway_type = 'Transit Gateway'
                 $_gateway      = $_tgw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'eni-[0-9a-f]{17}'
             {
                 $_gateway_type = 'Network Interface'
                 $_gateway      = $_eni_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'NetworkInterfaceId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'pcx-[0-9a-f]{17}'
             {
                 $_gateway_type = 'VPC Peering Connection'
                 $_gateway      = $_pcx_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'VpcPeeringConnectionId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             default
             {

@@ -18,6 +18,16 @@ function Show-SecurityGroupRule
         [string]
         $TagName,
 
+        [Parameter()]
+        [ValidateSet('IPv4', 'IPv6', '_')]
+        [string]
+        $IpVersion,
+
+        [Parameter()]
+        [ValidateSet('Inbound', 'Outbound')]
+        [string]
+        $Direction,
+
         [ValidateSet('Direction', 'RemoteAddress', 'IpVersion', $null)]
         [string]
         $GroupBy = 'Direction',
@@ -47,6 +57,9 @@ function Show-SecurityGroupRule
     $_plain_text        = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
+    $_ip_version = $IpVersion
+    $_direction  = $Direction
+
     # Configure the filter to query the Security Group.
     if (
         -not $PSBoundParameters.ContainsKey('GroupId') -and
@@ -72,8 +85,8 @@ function Show-SecurityGroupRule
         $_filter_value = $_param_set -eq 'GroupId' ? $_sg_id    : $_tag_name
     }
 
-    # Try to query the Security Group.
     try {
+        # Try to query the Security Group.
         Write-Verbose "Retrieving Security Group."
         $_sg_list = Get-EC2SecurityGroup -Verbose:$false -Filter @{
             Name   = $_filter_name
@@ -105,14 +118,38 @@ function Show-SecurityGroupRule
     # Save a reference to the filtered Security Group.
     $_sg = $_sg_list[0]
 
-    # Try to query the Security Group Rules.
     try {
+        # Try to query the Security Group Rules.
         $_sgr_list = Get-EC2SecurityGroupRule -Verbose:$false -Filter @{ Name = 'group-id'; Values = $_sg.GroupId }
 
         # If there are no rules to show, exit early.
         if (-not $_sgr_list) { return }
 
-        # Query Prefix List.
+        # Query referenced security groups and attached ENIs
+        if ($_ref_group_id_list = $_sgr_list.ReferencedGroupInfo.GroupId)
+        {
+            $_ref_sg_lookup = `
+                Get-EC2SecurityGroup -Verbose:$false -Filter @{Name = 'group-id'; Values = $_ref_group_id_list} |
+                Group-Object -AsHashTable GroupId
+
+            $_eni_list = Get-EC2NetworkInterface -Verbose:$false -Filter @{
+                Name = 'group-id'; Values = $_ref_group_id_list
+            }
+
+            $_eni_lookup = [hashtable]::new()
+            foreach ($_eni in $_eni_list)
+            {
+                foreach ($_eni_sg in $_eni.Groups)
+                {
+                    if (-not $_eni_lookup[$_eni_sg.GroupId]) {
+                        $_eni_lookup[$_eni_sg.GroupId] = [List[NetworkInterface]]::new()
+                    }
+                    $_eni_lookup[$_eni_sg.GroupId].Add($_eni)
+                }
+            }
+        }
+
+        # Query prefix lists.
         $_pl_lookup = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
             Name = 'prefix-list-id'
             Values = $_sgr_list.PrefixListId ?? @()
@@ -152,7 +189,7 @@ function Show-SecurityGroupRule
             if ($_.CidrIpv4) { 'IPv4' }
             if ($_.CidrIpv6) { 'IPv6' }
             if ($_.PrefixListId) { $_pl_lookup[$_.PrefixListId].AddressFamily }
-            if ($_.ReferencedGroupInfo) { '' }
+            if ($_.ReferencedGroupInfo) { '_' }
         }
         IpProtocol = {
             [IPProtocol]::FromString($_.IpProtocol)
@@ -169,8 +206,10 @@ function Show-SecurityGroupRule
                 $_pl | Get-ResourceString `
                     -IdPropertyName 'PrefixListId' -NamePropertyName 'PrefixListName' -PlainText:$_plain_text
             }
-            if ($_.ReferencedGroupInfo) {
-
+            if ($_ref_group_info = $_.ReferencedGroupInfo) {
+                $_ref_sg = $_ref_sg_lookup[$_ref_group_info.GroupId]
+                $_ref_sg | Get-ResourceString `
+                    -IdPropertyName 'GroupId' -NamePropertyName 'GroupName' -PlainText:$_plain_text
             }
         }
         ResolvedAddress = {
@@ -192,8 +231,10 @@ function Show-SecurityGroupRule
                 }
 
             }
-            if ($_.ReferencedGroupInfo) {
-
+            if ($_ref_group_info = $_.ReferencedGroupInfo) {
+                $_ref_eni_list = $_eni_lookup[$_ref_group_info.GroupId]
+                $_ref_eni_list.PrivateIpAddresses.PrivateIpAddress | New-IPv4Address | Sort-Object
+                $_ref_eni_list.Ipv6Addresses.Ipv6Address | New-IPv6Address | Sort-Object
             }
         }
         SecurityGroupRuleId = {
@@ -228,6 +269,34 @@ function Show-SecurityGroupRule
         -GroupBy          $_group_by `
         -Sort             $_sort `
         -Exclude          $_exclude
+
+    # Filter $_sgr_list.
+    if ($_direction -eq 'Inbound') {
+        $_sgr_list = $_sgr_list | Where-Object -not IsEgress
+    }
+    if ($_direction -eq 'Outbound') {
+        $_sgr_list = $_sgr_list | Where-Object IsEgress
+    }
+    if ($_ip_version -eq 'IPv4') {
+        $_sgr_list = $_sgr_list | Where-Object {
+            ($_.CidrIpv4 -as [bool]) -or
+            ($_.PrefixListId -as [bool] -and $_pl_lookup[$_.PrefixListId].AddressFamily -eq 'IPv4')
+        }
+    }
+    if ($_ip_version -eq 'IPv6') {
+        $_sgr_list = $_sgr_list | Where-Object {
+            ($_.CidrIpv4 -as [bool]) -or
+            ($_.PrefixListId -as [bool] -and $_pl_lookup[$_.PrefixListId].AddressFamily -eq 'IPv6')
+        }
+    }
+    if ($_ip_version -eq '_') {
+        $_sgr_list = $_sgr_list | Where-Object ReferencedGroupInfo
+    }
+
+    #if ($_.CidrIpv4) { 'IPv4' }
+    #if ($_.CidrIpv6) { 'IPv6' }
+    #if ($_.PrefixListId) { $_pl_lookup[$_.PrefixListId].AddressFamily }
+    #if ($_.ReferencedGroupInfo) { '_' }
 
     # Generate output after sorting and exclusion.
     $_output = $_sgr_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list

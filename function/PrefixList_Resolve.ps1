@@ -57,9 +57,10 @@ function Resolve-PrefixList
         try {
             foreach ($_pl in $_pl_list)
             {
-                Get-EC2ManagedPrefixListEntry -Verbose:$false $_pl.PrefixListId `
-                    -TargetVersion ([int]::Min($_pl.Version, $_version))
-                | Select-Object -ExpandProperty Cidr
+                $_target_version = $_pl.OwnerId -eq 'AWS' ? $null : [int]::Min($_pl.Version, $_version)
+
+                Get-EC2ManagedPrefixListEntry -Verbose:$false -TargetVersion $_target_version $_pl.PrefixListId |
+                Select-Object -ExpandProperty Cidr
             }
         }
         catch {
