@@ -179,7 +179,7 @@ function Show-SecurityGroup
         # Query VPCs.
         $_vpc_list = Get-EC2Vpc -Verbose:$false -Filter @{ Name = 'vpc-id'; Values = $_sg_list.VpcId }
 
-        # Query AWS Region.
+        # Query AWS Region - Needed for AWS Managed Prefix lists - i.e. com.amazonaws.$_region.s3
         $_region = (Get-DefaultAWSRegion -Verbose:$false).Region
 
         # Query Prefix Lists.
@@ -251,7 +251,7 @@ function Show-SecurityGroup
     $_inbound_rules_lookup  = [Dictionary[string, int]]::new()
     $_outbound_rules_lookup = [Dictionary[string, int]]::new()
 
-    # PUt VPC in Dictionary
+    # Put VPC in Dictionary
     foreach ($_vpc in $_vpc_list)
     {
         $_vpc_lookup[$_vpc.VpcId] = $_vpc

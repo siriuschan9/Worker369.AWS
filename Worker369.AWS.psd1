@@ -147,6 +147,9 @@ FunctionsToExport = @(
     'Enable-SubnetDns64',              'Disable-SubnetDns64',
     'Set-SubnetHostnameType',
 
+    # ENI
+    'Show-Eni',
+
     # Route 53
     'Show-Route53Dns',
 
