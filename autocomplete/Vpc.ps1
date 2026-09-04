@@ -13,7 +13,8 @@ $_cmd_lookup = @{
         'Show-Subnet', 'New-Subnet',
         'Show-RouteTable', 'New-RouteTable',
         'Show-NetworkAcl', 'New-NetworkAcl',
-        'Show-SecurityGroup', 'New-SecurityGroup'
+        'Show-SecurityGroup', 'New-SecurityGroup',
+        'Show-Eni'
     )
 
     VpcName = @(
@@ -29,7 +30,8 @@ $_cmd_lookup = @{
         'Show-Subnet', 'New-Subnet',
         'Show-RouteTable', 'New-RouteTable',
         'Show-NetworkAcl', 'New-NetworkAcl',
-        'Show-SecurityGroup', 'New-SecurityGroup'
+        'Show-SecurityGroup', 'New-SecurityGroup',
+        'Show-Eni'
     )
 
     Ipv4Cidr = @(
