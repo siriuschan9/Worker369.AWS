@@ -123,8 +123,8 @@ function Show-Eni
             $_dash      = $_plain_text ? '-' : "$($PSStyle.Dim)-$($PSStyle.Reset)"
             $_sort_expr = {$_.PrivateIpAddress | New-IPv4Address}
             $_map_expr  = {$_.Primary `
-                ? "[ P ] $($_eip_lookup[$_.PrivateIpAddress].PublicIp ?? $_dash)" `
-                : "[   ] $($_eip_lookup[$_.PrivateIpAddress].PublicIp ?? $_dash)"
+                ? "[ P ] $($_.Association.PublicIp ?? $_dash)" `
+                : "[   ] $($_.Association.PublicIp ?? $_dash)"
             }
             $_.PrivateIpAddresses | Sort-Object @{Expression = $_sort_expr} | ForEach-Object $_map_expr
         }
@@ -227,7 +227,7 @@ function Show-Eni
             Group-Object -AsHashTable GroupId
 
         # Query EIPs.
-        $_eip_lookup = Get-EC2Address -Verbose:$false | Group-Object -AsHashTable PrivateIpAddress
+        # $_eip_lookup = Get-EC2Address -Verbose:$false | Group-Object -AsHashTable PrivateIpAddress
     }
     catch {
         # Remove caught exception emitted into $Error list.

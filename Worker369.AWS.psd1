@@ -150,6 +150,9 @@ FunctionsToExport = @(
     # ENI
     'Show-Eni',
 
+    # EC2,
+    'Show-Ec2',
+
     # Route 53
     'Show-Route53Dns',
 

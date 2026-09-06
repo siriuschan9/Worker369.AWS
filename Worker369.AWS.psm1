@@ -67,6 +67,9 @@ Export-ModuleMember -Alias @(
     # ENI,
     'eni_show',
 
+    # EC2,
+    'ec2_show',
+
     # Route 53
     'dns_show',
 
