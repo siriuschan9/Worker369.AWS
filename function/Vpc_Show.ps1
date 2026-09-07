@@ -65,8 +65,8 @@ function Show-Vpc
             'VpcId', 'Name', 'DhcpOptionSet', 'DomainName', 'DnsServer', 'NtpServer', 'Ipv6LeaseTime'
         )
         Dependencies = @(
-            'VpcId', 'Name', 'InternetGateways', 'NatGateways', 'RouteTables', 'NetworkAcls', 'Subnets',
-            'SecurityGroups', 'ENIs', 'VpcPeering'
+            'VpcId', 'Name', 'InternetGateways', 'NatGateways', 'TransitGateways', 
+            'RouteTables', 'NetworkAcls', 'Subnets', 'SecurityGroups', 'ENIs', 'VpcPeering'
         )
         BlockPublicAccess = @(
             'VpcId', 'Name', 'ExclusionId', 'ExclusionMode', 'BlockResult','Ipv4Cidr', 'Ipv6Cidr'
@@ -215,6 +215,12 @@ function Show-Vpc
         Tenancy = {
             $_.InstanceTenancy
         }
+        TransitGateways = {
+            $_num_tgw_att  = $_tgw_att_lookup[$_.VpcId].Count
+            $_num_settings = $_plain_text ? $_plain_number_settings : $_style_number_settings
+
+            New-NumberInfo -FormatSettings $_num_settings $_num_tgw_att
+        }
         VpcId = {
             $_.VpcId
         }
@@ -353,6 +359,17 @@ function Show-Vpc
             } | Group-Object -AsHashTable @{
                 Expression = { $_.RequesterVpcInfo.VpcId }
             }
+        }
+
+        # Retrieve Transit Gateways.
+        if ($_view -in @('Dependencies'))
+        {
+            Write-Verbose "Retrieving Transit Gateway Attachments."
+
+            $_tgw_att_lookup = Get-EC2TransitGatewayAttachment -Verbose:$false -Filter @{
+                Name   = 'resource-id'
+                Values = $_vpc_list.VpcId
+            } | Group-Object -AsHashTable ResourceId
         }
 
         # Retrieve VPC flow logs.
