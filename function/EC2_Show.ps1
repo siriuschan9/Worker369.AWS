@@ -219,7 +219,7 @@ function Show-Ec2
             $_.KeyName
         }
         Memory = {
-            $_type_lookup[$_.InstanceType].NetworkInfo.NetworkPerformance
+            $_type_lookup[$_.InstanceType].MemoryInfo.SizeInMiB * 1024 * 1024 | New-ByteInfo
         }
         Name = {
             $_.Tags | Where-Object Key -eq 'Name' | Select-Object -ExpandProperty Value
@@ -317,7 +317,8 @@ function Show-Ec2
     try {
         # Get all EC2
         Write-Message -Progress $_cmdlet_name 'Retrieving EC2 information.'
-        $_ec2_list           = Get-EC2Instance -Verbose:$false -Select Reservations.Instances -Filter $_filter
+        $_ec2_list = Get-EC2Instance -Verbose:$false -Filter $_filter | Select-Object -ExpandProperty Instances
+        
         $_instance_id_list   = $_ec2_list.InstanceId
         $_instance_type_list = $_ec2_list.InstanceType | Select-Object -Unique
         $_volume_id_list     = $_ec2_list.BlockDeviceMappings.Ebs.VolumeId | Select-Object -Unique
