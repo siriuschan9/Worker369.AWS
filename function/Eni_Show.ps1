@@ -24,7 +24,7 @@ function Show-Eni
         [Amazon.EC2.Model.Filter[]]
         $Filter,
 
-        [ValidateSet('Vpc', 'Subnet', 'AvailabilityZone', 'InterfaceType', $null)]
+        [ValidateSet('Vpc', 'Subnet', 'AvailabilityZone', 'ResourceType', $null)]
         [string]
         $GroupBy = 'Vpc',
 
@@ -54,8 +54,7 @@ function Show-Eni
 
     $_view_definition = @{
         Attachment = @(
-            'NetworkInterfaceId', 'AttachmentId', 'InterfaceType',
-            'DeviceIndex' ,'DeleteOnTermination', 'Description'
+            'NetworkInterfaceId', 'AttachmentId', 'DeviceIndex' ,'DeleteOnTermination', 'ResourceType', 'Description'
         )
         Network = @(
             'NetworkInterfaceId', 'Subnet', 'AvailabilityZone',
@@ -65,11 +64,11 @@ function Show-Eni
             'NetworkInterfaceId', 'PrivateIp', 'PublicIp', 'Ipv6Address', 'Ipv4Prefix', 'Ipv6Prefix'
         )
         Security = @(
-            'NetworkInterfaceId', 'Status', 'SecurityGroups', 'SourceDestCheck', 'TcpEstablishedTimeout', 'UdpStreamTimeout', 'UdpTimeout'
+            'NetworkInterfaceId', 'Status', 'SecurityGroups', 'SourceDestCheck', 
+            'TcpEstablishedTimeout', 'UdpStreamTimeout', 'UdpTimeout'
         )
         Status = @(
-            'NetworkInterfaceId', 'Status', 'InterfaceType', 'PrivateIp', 'PublicIp', 'Ipv6Address',
-            'Description'
+            'NetworkInterfaceId', 'Status', 'PrivateIp', 'PublicIp', 'Ipv6Address', 'ResourceType', 'Description'
         )
     }
 
@@ -164,6 +163,9 @@ function Show-Eni
             $_vpc_lookup[$_.VpcId] | Get-ResourceString `
                 -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
+        ResourceType = {
+            $_types_lookup[$_.NetworkInterfaceId]
+        }
     }
 
     try {
@@ -235,6 +237,44 @@ function Show-Eni
 
         # Re-throw caught exception.
         $PSCmdlet.ThrowTerminatingError($_)
+    }
+
+    $_types_lookup = @{}
+    foreach ($_eni in $_eni_list)
+    {
+        if ($_eni.InterfaceType -eq 'interface')
+        {
+            switch ($_eni.RequesterId)
+            {
+                'amazon-rds' { $_types_lookup[$_eni.NetworkInterfaceId] = 'RDS' }
+                'amazon-elb' { $_types_lookup[$_eni.NetworkInterfaceId] = 'ALB' }
+                default      { $_types_lookup[$_eni.NetworkInterfaceId] = 'EC2' }
+            }
+        } 
+        elseif ($_eni.InterfaceType -eq 'network_load_balancer') 
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'NLB'
+        } 
+        elseif ($_eni.InterfaceType -eq 'gateway_load_balancer_endpoint') 
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'GWLB'   
+        }
+        elseif ($_eni.InterfaceType -eq 'vpc_endpoint') 
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'VPCE'   
+        }
+        elseif ($_eni.InterfaceType -eq 'nat_gateway') 
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'NAT'   
+        }
+        elseif ($_eni.InterfaceType -eq 'transit_gateway') 
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'TGW'   
+        }
+        elseif ($_eni.InterfaceType -eq 'lambda') 
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'Lambda'   
+        }
     }
 
     # Apply default sort order.
