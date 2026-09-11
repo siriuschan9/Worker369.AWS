@@ -103,7 +103,7 @@ function Show-SecurityGroup
             New-NumberInfo -FormatSettings $_num_style $_num_value
         }
         InboundRules = {
-            $_num_inbound_rules = $_.IpPermissions.Count
+            $_num_inbound_rules = $_inbound_rules_lookup[$_.GroupId]
             $_num_style         = $_plain_text ? $_counter_plain : $_counter_style
 
             New-NumberInfo -FormatSettings $_num_style $_num_inbound_rules
@@ -186,9 +186,9 @@ function Show-SecurityGroup
         $_pl_list = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
             Name = 'prefix-list-id'
             Values = (
-                @($_sg_list.IpPermissions?.PrefixListIds?.Id) +
-                @($_sg_list.IpPermissionsEgress?.PrefixListIds?.Id)
-            ) | Select-Object -Unique
+                @($_sg_list.IpPermissions.PrefixListIds.Id) + @($_sg_list.IpPermissionsEgress.PrefixListIds.Id) | 
+                Select-Object -Unique
+            ) ?? @()
         }
 
         # Query ENIs.
