@@ -2,13 +2,13 @@ using namespace System.Collections.Generic
 using namespace Amazon.EC2.Model
 using namespace Worker369.Utility
 
-function Show-Eni
+function Show-NetworkInterface
 {
     [CmdletBinding(DefaultParameterSetName = 'None')]
     [Alias('eni_show')]
     param (
         [Parameter(Position = 0)]
-        [ValidateSet('Attachment', 'IpAddresses', 'Network', 'Status', 'Security')]
+        [ValidateSet('Attachment', 'IpAssignment', 'Network', 'Status', 'Security')]
         [string]
         $View = 'Status',
 
@@ -52,6 +52,9 @@ function Show-Eni
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
+    # For easy pick-up later.
+    $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
+
     $_view_definition = @{
         Attachment = @(
             'NetworkInterfaceId', 'AttachmentId', 'DeviceIndex' ,'DeleteOnTermination', 'ResourceType', 'Description'
@@ -60,11 +63,12 @@ function Show-Eni
             'NetworkInterfaceId', 'Subnet', 'AvailabilityZone',
             'PrivateIp', 'PublicIp', 'Ipv6Address', 'MacAddress'
         )
-        IpAddresses = @(
-            'NetworkInterfaceId', 'PrivateIp', 'PublicIp', 'Ipv6Address', 'Ipv4Prefix', 'Ipv6Prefix'
+        IpAssignment = @(
+            'NetworkInterfaceId', 'PrivateIp', 'PublicIp', 'Ipv6Address', 'AutoAssignPublicIp',
+            'Ipv4Prefix', 'Ipv6Prefix'
         )
         Security = @(
-            'NetworkInterfaceId', 'Status', 'SecurityGroups', 'SourceDestCheck', 
+            'NetworkInterfaceId', 'Status', 'SecurityGroups', 'SourceDestCheck',
             'TcpEstablishedTimeout', 'UdpStreamTimeout', 'UdpTimeout'
         )
         Status = @(
@@ -73,6 +77,9 @@ function Show-Eni
     }
 
     $_select_definition = @{
+        AutoAssignPublicIp = {
+            $_auto_assign_public_ip_lookup[$_.NetworkInterfaceId]
+        }
         AvailabilityZone = {
             $_.AvailabilityZone
         }
@@ -204,6 +211,7 @@ function Show-Eni
         }
 
         # Query ENIs.
+        Write-Message -Progress $_cmdlet_name 'Fetching ENI data.'
         $_eni_list = `
             Get-EC2NetworkInterface -Verbose:$false -Filter $($_filter_list.Count -eq 0 ? $null : $_filter_list)
 
@@ -211,22 +219,35 @@ function Show-Eni
         if (-not $_eni_list) { return }
 
         # Query VPCs.
-        $_vpc_id_list = $_eni_list | Select-Object -Unique -ExpandProperty VpcId
-        $_vpc_lookup  = `
-            Get-EC2Vpc -Verbose:$false -Filter @{ Name = 'vpc-id'; Values = $_vpc_id_list} |
-            Group-Object -AsHashTable VpcId
+        if ($_group_by -in ('Vpc')) {
+            Write-Message -Progress $_cmdlet_name 'Fetching VPC data.'
+            $_vpc_id_list = $_eni_list | Select-Object -Unique -ExpandProperty VpcId
+            $_vpc_lookup  = `
+                Get-EC2Vpc -Verbose:$false -Filter @{ Name = 'vpc-id'; Values = $_vpc_id_list} |
+                Group-Object -AsHashTable VpcId
+        }
 
         # Query Subnets.
-        $_subnet_id_list = $_eni_list | Select-Object -Unique -ExpandProperty SubnetId
-        $_subnet_lookup  = `
-            Get-EC2Subnet -Verbose:$false -Filter @{ Name = 'subnet-id'; Values = $_subnet_id_list } |
-            Group-Object -AsHashTable SubnetId
+        if ($_view -in @('Network') -or $_group_by -in ('Vpc', 'Subnet')) {
+            Write-Message -Progress $_cmdlet_name 'Fetching Subnet data.'
+            $_subnet_id_list = $_eni_list | Select-Object -Unique -ExpandProperty SubnetId
+            $_subnet_lookup  = `
+                Get-EC2Subnet -Verbose:$false -Filter @{ Name = 'subnet-id'; Values = $_subnet_id_list } |
+                Group-Object -AsHashTable SubnetId
+        }
 
         # Query Security Groups.
-        $_sg_id_list = $_eni_list | Select-Object -ExpandProperty Groups | Select-Object -Unique -ExpandProperty GroupId
-        $_sg_lookup  = `
-            Get-EC2SecurityGroup -Verbose:$false -Filter @{ Name = 'group-id'; Values = $_sg_id_list } |
-            Group-Object -AsHashTable GroupId
+        if ($_view -in @('Security')) {
+            Write-Message -Progress $_cmdlet_name 'Fetching Security Group data.'
+            $_sg_id_list = $_eni_list | Select-Object -ExpandProperty Groups | Select-Object -Unique -ExpandProperty GroupId
+            $_sg_lookup  = `
+                Get-EC2SecurityGroup -Verbose:$false -Filter @{ Name = 'group-id'; Values = $_sg_id_list } |
+                Group-Object -AsHashTable GroupId
+        }
+
+        if ($_iew -in @('IpAssignment')) {
+            Write-Message -Progress $_cmdlet_name 'Fetching ENI attribute data.'
+        }
 
         # Query EIPs.
         # $_eip_lookup = Get-EC2Address -Verbose:$false | Group-Object -AsHashTable PrivateIpAddress
@@ -250,30 +271,30 @@ function Show-Eni
                 'amazon-elb' { $_types_lookup[$_eni.NetworkInterfaceId] = 'ALB' }
                 default      { $_types_lookup[$_eni.NetworkInterfaceId] = 'EC2' }
             }
-        } 
-        elseif ($_eni.InterfaceType -eq 'network_load_balancer') 
+        }
+        elseif ($_eni.InterfaceType -eq 'network_load_balancer')
         {
             $_types_lookup[$_eni.NetworkInterfaceId] = 'NLB'
-        } 
-        elseif ($_eni.InterfaceType -eq 'gateway_load_balancer_endpoint') 
-        {
-            $_types_lookup[$_eni.NetworkInterfaceId] = 'GWLB'   
         }
-        elseif ($_eni.InterfaceType -eq 'vpc_endpoint') 
+        elseif ($_eni.InterfaceType -eq 'gateway_load_balancer_endpoint')
         {
-            $_types_lookup[$_eni.NetworkInterfaceId] = 'VPCE'   
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'GWLB'
         }
-        elseif ($_eni.InterfaceType -eq 'nat_gateway') 
+        elseif ($_eni.InterfaceType -eq 'vpc_endpoint')
         {
-            $_types_lookup[$_eni.NetworkInterfaceId] = 'NAT'   
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'VPCE'
         }
-        elseif ($_eni.InterfaceType -eq 'transit_gateway') 
+        elseif ($_eni.InterfaceType -eq 'nat_gateway')
         {
-            $_types_lookup[$_eni.NetworkInterfaceId] = 'TGW'   
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'NAT'
         }
-        elseif ($_eni.InterfaceType -eq 'lambda') 
+        elseif ($_eni.InterfaceType -eq 'transit_gateway')
         {
-            $_types_lookup[$_eni.NetworkInterfaceId] = 'Lambda'   
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'TGW'
+        }
+        elseif ($_eni.InterfaceType -eq 'lambda')
+        {
+            $_types_lookup[$_eni.NetworkInterfaceId] = 'Lambda'
         }
     }
 

@@ -22,7 +22,7 @@ function Write-PrefixList
 
     BEGIN
     {
-         # For easy pick up.
+        # For easy pick up.
         $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
         $_param_set   = $PSCmdlet.ParameterSetName
     }

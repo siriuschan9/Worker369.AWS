@@ -1,7 +1,7 @@
-function New-Eni
+function New-NetworkInterface
 {
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'SubnetName_GroupName')]
-    [Alias('eni_new')]
+    [Alias('eni_add')]
     param(
         [Parameter(Position = 0)]
         [string]

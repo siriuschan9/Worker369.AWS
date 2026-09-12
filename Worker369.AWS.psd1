@@ -92,133 +92,226 @@ RequiredModules = @(
 # use an empty array if there are no functions to export.
 FunctionsToExport = @(
 
+    # ---------------------------------------------------------------------------------------------------------------- #
     # Utilities
-    'Get-QueryDefinition',  # Consider to remove if released.
-    'Get-ResourceString',   # Consider to remove if released.
-    'Get-HintItem',         # Consider to remove if released.
-    'New-TagSpecification', # Consider to remove if released.
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Get-HintItem',                                                         # Consider to remove if released.
+    'Get-QueryDefinition',                                                  # Consider to remove if released.
+    'Get-ResourceString',                                                   # Consider to remove if released.
+    'New-TagSpecification',                                                 # Consider to remove if released.
 
-    # MFA
-    'Write-MfaProfile',
-
-    # Prefix list
-    'Resolve-PrefixList', 'Write-PrefixList',
-
-    # VPC BPA Exclusion
-    'Show-VpcBpaExclusion', 'New-VpcBpaExclusion', 'Edit-VpcBpaExclusion', 'Remove-VpcBpaExclusion',
-
-    # VPC
-    'Show-Vpc', 'New-Vpc', 'Rename-Vpc', 'Remove-Vpc',
-
-    # VPC CIDR
-    'Add-VpcIpv4Cidr', 'Remove-VpcIpv4Cidr',
-    'Add-VpcIpv6Cidr', 'Remove-VpcIpv6Cidr',
-
-    # VPC CIDR Map
-    'Show-VpcCidrMap'
-
-    # VPC Attribute
-    'Enable-VpcDnsResolution', 'Disable-VpcDnsResolution',
-    'Enable-VpcDnsHostnames',  'Disable-VpcDnsHostnames',
-    'Enable-VpcNauMetrics',    'Disable-VpcNauMetrics',
-
-    # VPC Peering
-    'Show-VpcPeering', 'New-VpcPeering', 'Rename-VpcPeering', 'Remove-VpcPeering',
-    'Approve-VpcPeering', 'Deny-VpcPeering',
-
-    # VPC Peering Attributes
-    'Enable-VpcPeeringDns', 'Disable-VpcPeeringDns',
-
-    # Internet Gateway,
-    'Show-InternetGateway', 'New-InternetGateway', 'Rename-InternetGateway', 'Remove-InternetGateway',
-    'Mount-InternetGateway', 'Dismount-InternetGateway',
-
-    # Subnet
-    'Show-Subnet', 'New-Subnet', 'Copy-Subnet', 'Rename-Subnet', 'Remove-Subnet',
-
-    # Subnet CIDR
-    'Add-SubnetIpv6Cidr', 'Remove-SubnetIpv6Cidr',
-
-    # Subnet Attribute
-    'Enable-SubnetAAAARecord',         'Disable-SubnetAAAARecord',
-    'Enable-SubnetARecord',            'Disable-SubnetARecord',
-    'Enable-SubnetAutoAssignPublicIP', 'Disable-SubnetAutoAssignPublicIP',
-    'Enable-SubnetAutoAssignIPv6',     'Disable-SubnetAutoAssignIPv6',
-    'Enable-SubnetDns64',              'Disable-SubnetDns64',
-    'Set-SubnetHostnameType',
-
-    # ENI
-    'Show-Eni',
-
-    # EC2,
-    'Show-Ec2',
-
-    # Route 53
-    'Show-Route53Dns',
-
-    # Route Table
-    'Show-RouteTable', 'New-RouteTable', 'Rename-RouteTable', 'Remove-RouteTable',
-
-    # Default Route Table
-    'Get-DefaultRouteTable', 'Set-DefaultRouteTable', 'Clear-DefaultRouteTable',
-
-    # Route Table Association
-    'New-RouteTableAssociation', 'Remove-RouteTableAssociation',
-
-    # Route Entry
-    'Show-Route', 'Find-Route', 'Add-Route', 'Remove-Route',
-
-    # Network ACL
-    'Show-NetworkAcl', 'New-NetworkAcl', 'Rename-NetworkAcl', 'Remove-NetworkAcl',
-
-    # Security Group
-    'Show-SecurityGroup', 'New-SecurityGroup', 'Copy-SecurityGroup', 'Clear-SecurityGroup',
-    'Rename-SecurityGroup', 'Remove-SecurityGroup',
-
-    # Default Security Group
-    'Set-DefaultSecurityGroup', 'Get-DefaultSecurityGroup',
-
-    # Security Group Rule
-    'Show-SecurityGroupRule',
-
+    # ---------------------------------------------------------------------------------------------------------------- #
     # AWS Organization
-    'Show-OrgTree'
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-OrgTree'                      # org_tree                          # Prints AWS Organization tree
 
+    # ---------------------------------------------------------------------------------------------------------------- #
     # CloudFormation
-    'Show-Stack', 'Show-StackDrift', 'Show-StackInstance', 'Show-StackResource',
-    'Show-IacScanBrief', 'Show-IacScanDetail',
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Stack',                       # stack_show
+    'Show-StackDrift',                  # stack_drift_show
+    'Show-StackInstance',               # stack_instance_show
+    'Show-StackResource',               # stack_resource_show
+    'Show-IacScanBrief',                # iac_scan_brief
+    'Show-IacScanDetail',               # iac_scan_detail
 
+    # ---------------------------------------------------------------------------------------------------------------- #
     # CloudWatch Alarms
-    'New-EC2CpuAlarm', 'New-EC2StatusAlarm',
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'New-Ec2CpuAlarm',                  # alarm_ec2_cpu
+    'New-Ec2StatusAlarm',               # alarm_ec2_status
 
-    # IAM,
-    'Show-IamRole', 'Show-IamRoleTrustPolicy',
-    'Find-IamPolicy', 'Read-IamPolicyDocument', 'Show-IamPolicyContent',
-
-    # Identity Center
-    'Show-SsoAssignment', 'Show-SsoUserPermission',
-
-    # Lambda
-    'Show-Lambda',
-
-    # KMS,
-    'Show-KmsKey',
-
-    # S3
-    'Show-S3Folder', 'Show-S3FileContent', 'Show-S3FileVersion',
-    'Get-S3File',
-    'Show-S3Bucket', 'Show-S3Policy',
-    'Clear-S3Bucket',
-    'Enable-S3Versioning', 'Disable-S3Versioning',
-    'Enable-S3BucketKey', 'Disable-S3BucketKey',
-    'Set-S3Encryption',
-    'Set-S3BlockedEncryption', 'Clear-S3BlockedEncryption',
-
-    # SES
-    'Send-SesMailMessage',
-
+    # ---------------------------------------------------------------------------------------------------------------- #
     # EC2
-    'Get-EC2SystemLog'
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Ec2',                         # ec2_show
+    'Get-Ec2SystemLog',                 # ec2_console
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # ENI
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-NetworkInterface',            # eni_show
+    #'New-NetworkInterface',             # eni_add
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # IAM
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-IamRole',                     # iam_role_show                 # Lists roles.
+    'Show-IamRoleTrustPolicy',          # iam_role_trust_show           # Prints trust policy content
+    'Find-IamPolicy',                   # iam_policy_find               # Searches policy ARNs
+    'Read-IamPolicyDocument',           # iam_policy_read               # Lists policy statements in tablular column
+    'Show-IamPolicyContent',            # iam_policy_cat                # Prints out the IAM policy content
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Identity Center
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-SsoAssignment',               # sso_assign_show               # Lists assignments to AWS accounts
+    'Show-SsoUserPermission',           # sso_uperm_show                # Lists permissions assigned to SSO users
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Internet Gateway
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-InternetGateway',             # igw_show
+    'New-InternetGateway',              # igw_add
+    'Rename-InternetGateway',           # igw_rn
+    'Remove-InternetGateway',           # igw_rm
+    'Mount-InternetGateway',            # igw_mount                     # Attaches IGW to VPC
+    'Dismount-InternetGateway',         # igw_umount                    # Detaches IGW from VPC
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Lambda
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Lambda',                      # func_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # KMS
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-KmsKey',                      # kms_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Managed Prefix list
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Resolve-PrefixList',               # pl_resolve
+    'Write-PrefixList',                 # pl_write
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # MFA
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Write-MfaProfile',                 # mfa
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Network ACL
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-NetworkAcl',                  # nacl_show
+    'New-NetworkAcl',                   # nacl_add
+    'Rename-NetworkAcl',                # nacl_rn
+    'Remove-NetworkAcl',                # nacl_rm
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Route 53
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Route53Dns',                  # dns_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Route Table
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-RouteTable',                  # rt_show
+    'New-RouteTable',                   # rt_add
+    'Rename-RouteTable',                # rt_rn
+    'Remove-RouteTable',                # rt_rm
+    'New-RouteTableAssociation',        # rt_assoc_add
+    'Remove-RouteTableAssociation',     # rt_assoc_rm
+    'Get-DefaultRouteTable',            # rt_default?                   # What is the shell's current route table
+    'Set-DefaultRouteTable',            # rt_detault                    # Sets the shell's current route table
+    'Clear-DefaultRouteTable',          # rt_default_clear              # Clears the shell's current route table
+    'Show-Route',                       # route_show
+    'Find-Route',                       # route_find
+    'Add-Route',                        # route_add
+    'Remove-Route',                     # route_rm
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # S3
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-S3Folder',                    # s3_ls                         # Lists files
+    'Show-S3FileContent',               # s3_cat                        # Prints file content
+    'Show-S3FileVersion',               # s3_ver                        # Lists file versions
+    'Get-S3File',                       # s3_get                        # Downloads file
+    'Show-S3Bucket',                    # s3_show                       # Lists buckets
+    'Show-S3Policy',                    # s3_policy_show                # Points bucket policy
+    'Clear-S3Bucket',                   # s3_clear                      # Empties bucket
+    'Enable-S3Versioning',              # s3_ver_en                     # Activates versioning
+    'Disable-S3Versioning',             # s3_ver_dis                    # Suspends versioning
+    'Enable-S3BucketKey',               # s3_bkey_en                    # Enable bucket key
+    'Disable-S3BucketKey',              # s3_bkey_dis                   # Disable bucket key
+    'Set-S3Encryption',                 # s3_encrypt                    # Sets default encryption
+    'Set-S3BlockedEncryption',          # s3_blkencrypt                 # Sets encryptions to block
+    'Clear-S3BlockedEncryption',        # s3_blkencrypt_clear           # Remove blocked encryptions
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Security Group
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-SecurityGroup',               # sg_show
+    'New-SecurityGroup',                # sg_add
+    'Copy-SecurityGroup',               # sg_cp                         # Copy all rules to another security group
+    'Clear-SecurityGroup',              # sg_clear                      # Remove all rules in a security group
+    'Rename-SecurityGroup',             # sg_rn
+    'Remove-SecurityGroup',             # sg_rm
+    'Get-DefaultSecurityGroup',         # sg_default?                   # What is the shell's current security group
+    'Set-DefaultSecurityGroup',         # sg_default                    # Sets the shell's current security group
+    'Show-SecurityGroupRule',           # sgr_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # SES
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Send-SesMailMessage',              # ses_send
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # SSM
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Fleet',                       # fleet_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Subnet
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Subnet',                      # subnet_show
+    'New-Subnet',                       # subnet_add
+    'Copy-Subnet',                      # subnet_cp                     # Clones a subnet with same attributes
+    'Rename-Subnet',                    # subnet_rn
+    'Remove-Subnet',                    # subnet_rm
+    'Add-SubnetIpv6Cidr',               # subnet_ipv6_add
+    'Remove-SubnetIpv6Cidr',            # subnet_ipv6_rm
+    'Enable-SubnetAAAARecord',          # subnet_aaaa_en
+    'Disable-SubnetAAAARecord',         # subnet_aaaa_dis
+    'Enable-SubnetARecord',             # subnet_a_en
+    'Disable-SubnetARecord',            # subnet_a_dis
+    'Enable-SubnetAutoAssignPublicIP',  # subnet_aip_en
+    'Disable-SubnetAutoAssignPublicIP', # subnet_aip_dis
+    'Enable-SubnetAutoAssignIPv6',      # subnet_aip6_en
+    'Disable-SubnetAutoAssignIPv6',     # subnet_aip6_dis
+    'Enable-SubnetDns64',               # subnet_dns64_en
+    'Disable-SubnetDns64',              # subnet_dns64_dis
+    'Set-SubnetHostnameType',           # subnet_host
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Transit Gateway
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-TransitGatewayRouteTable',    # tgw_rt_show
+    'Show-TransitGatewayRoute',         # tgw_route_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # VPC
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Vpc',                         # vpc_show
+    'New-Vpc',                          # vpc_add
+    'Rename-Vpc',                       # vpc_rn
+    'Remove-Vpc',                       # vpc_rm
+    'Add-VpcIpv4Cidr',                  # vpc_ipv4_add
+    'Remove-VpcIpv4Cidr',               # vpc_ipv4_rm
+    'Add-VpcIpv6Cidr',                  # vpc_ipv6_add
+    'Remove-VpcIpv6Cidr',               # vpc_ipv6_rm
+    'Show-VpcCidrMap'                   # vpc_cidrmap_show              # Lists VPC CIDRs utilisation
+    'Enable-VpcDnsResolution',          # vpc_dnsres_en
+    'Disable-VpcDnsResolution',         # vpc_dnsres_dis
+    'Enable-VpcDnsHostnames',           # vpc_dnshost_en
+    'Disable-VpcDnsHostnames',          # vpc_dnshost_dis
+    'Enable-VpcNauMetrics',             # vpc_nau_en
+    'Disable-VpcNauMetrics',            # vpc_nau_dis
+    'Show-VpcBpaExclusion',             # vpc_bpa_excl_show
+    'New-VpcBpaExclusion',              # vpc_bpa_excl_add
+    'Edit-VpcBpaExclusion',             # vpc_bpa_excl_edit
+    'Remove-VpcBpaExclusion',           # vpc_bpa_excl_rm
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # VPC Peering
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-VpcPeering',                  # pcx_show
+    'New-VpcPeering',                   # pcx_add
+    'Rename-VpcPeering',                # pcx_rn
+    'Remove-VpcPeering',                # pcx_rm
+    'Approve-VpcPeering',               # pcx_accept                    Accepts VPC peering requests
+    'Deny-VpcPeering',                  # pcx_reject                    Rejects VPC peering requests
+    'Enable-VpcPeeringDns',             # pcx_dns_en
+    'Disable-VpcPeeringDns'             # pcx_dns_dis
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry,
