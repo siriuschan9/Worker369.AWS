@@ -1,4 +1,4 @@
-function Get-EC2SystemLog
+function Get-Ec2SystemLog
 {
     [CmdletBinding(DefaultParameterSetName = 'InstanceName')]
     [Alias('ec2_console')]

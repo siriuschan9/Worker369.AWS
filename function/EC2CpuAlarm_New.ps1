@@ -52,7 +52,7 @@ that triggers after 3 consecutive 5-min datapoints that exceeds 80 percent.
 .NOTES
 General notes
 #>
-function New-EC2CpuAlarm
+function New-Ec2CpuAlarm
 {
     [CmdletBinding(SupportsShouldProcess = $true)]
     [Alias('alarm_ec2_cpu')]

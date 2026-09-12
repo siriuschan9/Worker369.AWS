@@ -69,6 +69,7 @@ RequiredModules = @(
     'AWS.Tools.Route53',
     'AWS.Tools.S3',
     'AWS.Tools.SimpleEmailV2',
+    'AWS.Tools.SimpleSystemsManagement',
     'AWS.Tools.SecurityToken',
     'AWS.Tools.SSOAdmin'
 )

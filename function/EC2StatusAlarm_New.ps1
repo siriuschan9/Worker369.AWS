@@ -52,7 +52,7 @@ that triggers after 3 consecutive failed check on 5-min datapoints.
 .NOTES
 General notes
 #>
-function New-EC2StatusAlarm
+function New-Ec2StatusAlarm
 {
     [CmdletBinding(SupportsShouldProcess = $true)]
     [Alias('alarm_ec2_status')]
