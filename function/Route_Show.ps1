@@ -311,7 +311,7 @@ function Show-Route
             {
                 $_gateway_type = 'Network Interface'
                 $_gateway      = $_eni_lookup[$_target_id] | Get-ResourceString `
-                    -IdPropertyName 'NetworkInterfaceId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                    -IdPropertyName 'NetworkInterfaceId' -TagPropertyName 'TagSet' -PlainText:$_plain_text
                 $_gateway      = $_gateway ?? $_target_id
             }
             'pcx-[0-9a-f]{17}'
