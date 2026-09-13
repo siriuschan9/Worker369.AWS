@@ -34,7 +34,7 @@ function Show-TransitGatewayRoute
         [switch]
         $NoRowSeparator
     )
-    
+
     # For easy pick up.
     $_param_set = $PSCmdlet.ParameterSetName
 
@@ -84,7 +84,17 @@ function Show-TransitGatewayRoute
             }
         }
         NextHop = {
-            $_.TransitGatewayAttachments.ResourceId
+            $_attachments = $_.TransitGatewayAttachments
+
+            foreach ($_attachment in $_attachments)
+            {
+                $_target        = $_attachment.ResourceId
+                $_tgw_attach    = $_tgw_attach_lookup[$_attachment.TransitGatewayAttachmentId]
+                $_format_attach = $_tgw_attach | Get-ResourceString `
+                    -IdPropertyName 'TransitGatewayAttachmentId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                "$_target via $_format_attach"
+            }
+
         }
     }
 
@@ -146,7 +156,7 @@ function Show-TransitGatewayRoute
     if ($_trt_list.Count -gt 1)
     {
         Write-Error (
-            "Multiple Transit Gateway Route Tables were found for '$_filter_value'." + 
+            "Multiple Transit Gateway Route Tables were found for '$_filter_value'." +
             "It must match exactly one Route Table."
         )
         return
@@ -154,11 +164,21 @@ function Show-TransitGatewayRoute
 
     # Save a reference to the filtered route table.
     $_trt = $_trt_list[0]
-    
-    # Fetch the routes in this route table.
+
     try {
+        # Fetch transit gateway attachments.
+        $_tgw_attach_lookup = `
+            Get-EC2TransitGatewayAttachment `
+                -Verbose:$false `
+                -Filter @{Name = 'transit-gateway-id'; Values = $_trt.TransitGatewayId} |
+            Group-Object -AsHashTable TransitGatewayAttachmentId
+
+        # Fetch the routes in this route table.
         $_route_list = `
-            Search-EC2TransitGatewayRoute -Verbose:$false -Filter @{Name='type';Values=@('propagated', 'static')} -TransitGatewayRouteTableId $_trt.TransitGatewayRouteTableId | 
+            Search-EC2TransitGatewayRoute `
+                -Verbose:$false `
+                -Filter @{Name = 'type'; Values = @('propagated', 'static')} `
+                -TransitGatewayRouteTableId $_trt.TransitGatewayRouteTableId |
             Select-Object -ExpandProperty Routes
     }
     catch {
@@ -166,7 +186,7 @@ function Show-TransitGatewayRoute
         Pop-ErrorRecord $_
 
         # Re-throw caught exception.
-        $PSCmdlet.ThrowTerminatingError($_) 
+        $PSCmdlet.ThrowTerminatingError($_)
     }
 
     # If there are no routes to show, exit early.

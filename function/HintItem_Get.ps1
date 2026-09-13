@@ -37,7 +37,7 @@ function Get-HintItem
                 Where-Object Key -eq 'Name' |
                 Select-Object -ExpandProperty Value
 
-            [HintItem]::new($_resource_id, $_resource_name, $_alignment)
+            [Worker369.AWS.HintItem]::new($_resource_id, $_resource_name, $_alignment)
         }
         catch
         {
