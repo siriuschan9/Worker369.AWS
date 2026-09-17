@@ -400,7 +400,7 @@ function Get-BucketMetric
                             Namespace = $_metric.Namespace
                         }
                     }
-                    ReturnData = true
+                    ReturnData = $true
                 }
             }
         }
