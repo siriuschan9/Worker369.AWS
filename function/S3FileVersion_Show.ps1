@@ -21,6 +21,9 @@ function Show-S3FileVersion
         [Int[]]
         $Exclude,
 
+        [scriptblock]
+        $Where = {$true},
+
         [switch]
         $PlainText,
 
@@ -37,6 +40,7 @@ function Show-S3FileVersion
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = -not $ShowRowSeparator.IsPresent
 
@@ -94,7 +98,7 @@ function Show-S3FileVersion
         }
     }
 
-    # We use a separate project definition because we want to dimming rows in select definition affect the sorting.
+    # We use a separate project definition because we want to dim rows in select definition after the sorting.
     $_project_definition = @{
         IsDeleteMarker = {
             $_.IsDeleteMarker
@@ -105,7 +109,7 @@ function Show-S3FileVersion
         LastModified = {
             $_value     = $_.LastModified
             $_dim_value = -not $_.IsLatest.IsChecked -and -not $_plain_text -and $_group_by -ne 'LastModified'
-            $_dim_value ? "$($_dim)$($_value)$($_reset)" : $_value
+            $_dim_value ? "$($_dim)$($_value.ToString())$($_reset)" : "$($_value.ToString())"
         }
         Location = {
             $_value     = $_.Location
@@ -167,8 +171,11 @@ function Show-S3FileVersion
     }
 
     # Generate output after sorting and exclusion.
-    $_output = `
-        $_version_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list_extended
+    $_output = $_version_list `
+        | Select-Object $_select_list `
+        | Sort-Object $_sort_list `
+        | Where-Object $_where `
+        | Select-Object $_project_list_extended
 
     # Print out the output.
     if ($global:EnableHtmlOutput) {
