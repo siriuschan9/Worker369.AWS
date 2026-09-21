@@ -61,15 +61,15 @@ function Show-NetworkInterface
         )
         Network = @(
             'NetworkInterfaceId', 'Subnet', 'AvailabilityZone',
-            'PrivateIp', 'PublicIp', 'Ipv6Address', 'MacAddress'
+            'PrivateIp', 'PublicIp', 'Ipv6Address', 'MacAddress', 'Description'
         )
         IpAssignment = @(
             'NetworkInterfaceId', 'PrivateIp', 'PublicIp', 'Ipv6Address', 'AutoAssignPublicIp',
-            'Ipv4Prefix', 'Ipv6Prefix'
+            'Ipv4Prefix', 'Ipv6Prefix', 'Description'
         )
         Security = @(
             'NetworkInterfaceId', 'Status', 'SecurityGroups', 'SourceDestCheck',
-            'TcpEstablishedTimeout', 'UdpStreamTimeout', 'UdpTimeout'
+            'TcpEstablishedTimeout', 'UdpStreamTimeout', 'UdpTimeout', 'Description'
         )
         Status = @(
             'NetworkInterfaceId', 'Status', 'PrivateIp', 'PublicIp', 'Ipv6Address', 'ResourceType', 'Description'

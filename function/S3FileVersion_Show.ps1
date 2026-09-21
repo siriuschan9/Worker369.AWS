@@ -11,7 +11,7 @@ function Show-S3FileVersion
         [string]
         $Folder,
 
-        [ValidateSet('Location')]
+        [ValidateSet('Location', 'Name')]
         [string]
         $GroupBy = 'Location',
 

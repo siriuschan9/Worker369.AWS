@@ -8,7 +8,7 @@ function Show-Fleet
         [string]
         $View = 'Status',
 
-        [ValidateSet('PlatformType', 'PingStatus', 'InstanceStatus', $null)]
+        [ValidateSet('PlatformType', 'PingStatus', 'InstanceStatus', 'ComplianceStatus', $null)]
         [string]
         $GroupBy = 'PlatformType',
 
@@ -36,14 +36,27 @@ function Show-Fleet
     # For easy pick-up later.
     $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
 
+    # For formatting compliance status
+    $_compliance_style_lookup = @{
+        'COMPLIANT'     = $PSStyle.Background.Green
+        'NON_COMPLIANT' = $PSStyle.Background.BrightRed
+        'NO_DATA'       = $PSStyle.Background.BrightBlack
+    }
+
+    # For formatting non-compliance count
+    $_counter_style = [Worker369.Utility.NumberInfoSettings]::Make()
+    $_counter_plain = [Worker369.Utility.NumberInfoSettings]::Make()
+    $_counter_style.Format.Unscaled = "#,###;`e[2mNO_DATA`e[0m;`e[2m-`e[0m"
+    $_counter_plain.Format.Unscaled = '#,###;NO_DATA;-'
+
     $_view_definition = @{
         Status = @(
             'InstanceId', 'Name', 'ComputerName', 'IpAddress', 'PlatformName', 'PlatformVersion',
             'InstanceStatus', 'PingStatus'
         )
         PatchCompliance = @(
-            'InstanceId', 'Name', 'ComputerName', 'PatchBaseline', 'PatchGroup',
-            'ComplianceStatus', 'NonCompliantCount'
+            'ComplianceStatus', 'InstanceId', 'Name', 'ComputerName', 'PatchBaseline', 'PatchGroup',
+            'NonCompliantCount'
         )
     }
 
@@ -121,9 +134,13 @@ function Show-Fleet
             $_.ComputerName
         }
         ComplianceStatus = {
-            if ($_.ComplianceStatus.Description -eq 'NON_COMPLIANT' -and -not $_plain_text) {
-                "$($PSStyle.Background.BrightRed)" +
-                "$(New-Checkbox -Description 'NON_COMPLIANT' $false -PlainText:$true)" +
+            if (-not $_plain_text) {
+                $_compliance_status = $_.ComplianceStatus -as [Worker369.Utility.Checkbox]
+                $_description       = $_compliance_status.Description
+                $_is_compliant      = $_compliance_status.IsChecked
+
+                "$($_compliance_style_lookup[$_description])" +
+                "$(New-Checkbox -Description $_description -PlainText:$true $_is_compliant)".PadRight(19) +
                 "$($PSStyle.Reset)"
             }
             else {
@@ -143,7 +160,11 @@ function Show-Fleet
             $_.Name
         }
         NonCompliantCount = {
-            $_.NonCompliantCount
+            $_num_style = $_plain_text ? $_counter_plain : $_counter_style
+
+            $_non_compliant_count                = $_.NonCompliantCount -as [Worker369.Utility.NumberInfo]
+            $_non_compliant_count.FormatSettings = $_num_style
+            $_non_compliant_count
         }
         PatchBaseline = {
             $_.PatchBaseline
@@ -168,7 +189,7 @@ function Show-Fleet
     try {
         # We use SSM inventory because only this returned data contains stopped instances.
         Write-Message -Progress $_cmdlet_name 'Retrieving SSM Inventory.'
-        $_inventory = Get-SSMInventory -Verbose -Filter @{
+        $_inventory = Get-SSMInventory -Verbose:$false -Filter @{
             Key    = 'AWS:InstanceInformation.InstanceStatus'
             Values = 'Terminated'
             Type   = 'NotEqual'
@@ -259,6 +280,7 @@ function Show-Fleet
     else {
         $_output | Format-Column `
             -AlignLeft PingStatus, InstanceStatus, AgentVersion, ComplianceStatus `
+            -AlignRight NonCompliantCount `
             -GroupBy $_group_by `
             -PlainText:$_plain_text `
             -NoRowSeparator:$_no_row_separator
