@@ -24,10 +24,10 @@ Register-ArgumentCompleter -ParameterName 'TransitGatewayId' -CommandName $_cmd_
         $_fake_bound_parameters
     )
 
-    $_tgw_list = Get-EC2TransitGateway -Verbose:$false -Filter @{
-        Name   = 'transit-gateway-id'
-        Values = "$_word_to_complete*"
-    }
+    # Bug: Filter for 'transit-gateway-id' does not honour wildcard *
+    # Hence, for this function, we do the filtering locally.
+
+    $_tgw_list = Get-EC2TransitGateway -Verbose:$false
 
     if (-not $_tgw_list) { return }
 
@@ -36,7 +36,7 @@ Register-ArgumentCompleter -ParameterName 'TransitGatewayId' -CommandName $_cmd_
         Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_tgw_list | Get-HintItem -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -Align $_align |
-    Sort-Object | ForEach-Object {
+    Sort-Object | Where-Object { $_ -like "$_word_to_complete*" } ｜ ForEach-Object {
 
         [System.Management.Automation.CompletionResult]::new(
             $_.ResourceId,    # completionText

@@ -163,6 +163,7 @@ Export-ModuleMember -Alias @(
     # ---------------------------------------------------------------------------------------------------------------- #
     # SSM
     # ---------------------------------------------------------------------------------------------------------------- #
+    'cmd_show',                         # Show-Command
     'fleet_show',                       # Show-Fleet
 
     # ---------------------------------------------------------------------------------------------------------------- #
@@ -247,3 +248,8 @@ $IamPolicyCache_Local | Out-Null
 $IamPolicyCache_AWS   | Out-Null
 Export-ModuleMember -Variable 'IamPolicyCache_Local'
 Export-ModuleMember -Variable 'IamPolicyCache_AWS'
+
+# Pagination
+[hashtable]$NoAutoIteration = @{}
+$NoAutoIteration['RunCommand'] = $true
+Export-ModuleMember -Variable 'NoAutoIteration'
