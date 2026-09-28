@@ -117,8 +117,9 @@ FunctionsToExport = @(
     'Show-IacScanDetail',               # iac_scan_detail
 
     # ---------------------------------------------------------------------------------------------------------------- #
-    # CloudWatch Alarms
+    # CloudWatch
     # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-CloudWatchLogGroup',          # cwlg_show
     'New-Ec2CpuAlarm',                  # alarm_ec2_cpu
     'New-Ec2StatusAlarm',               # alarm_ec2_status
 
