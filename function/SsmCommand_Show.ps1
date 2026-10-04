@@ -1,4 +1,4 @@
-function Show-Command
+function Show-SsmCommand
 {
     [CmdletBinding()]
     [Alias('cmd_show')]
@@ -103,7 +103,7 @@ function Show-Command
     # A number style that display dash for zero.
     $_num_style = [Worker369.Utility.NumberInfoSettings]::Make()
     if ($_plain_text) {
-        $_num_style.Format.Unscaled =  '#,###;#,###;-'          # undimmed dash
+        $_num_style.Format.Unscaled = '#,###;#,###;-'          # undimmed dash
     }
     else {
         $_num_style.Format.Unscaled = "#,###;#,###;`e[2m-`e[0m" # dimmed dash

@@ -1,7 +1,7 @@
 function Show-TransitGatewayRouteTable
 {
     [Alias('tgw_rt_show')]
-    [CmdletBinding(DefaultParameterSetName = 'None')]
+    [CmdletBinding(DefaultParameterSetName = 'TransitGatewayName')]
     param (
         [parameter(Position = 0)]
         [ValidateSet('Default')]
@@ -9,11 +9,11 @@ function Show-TransitGatewayRouteTable
         $View = 'Default',
 
         [Parameter(ParameterSetName = 'TransitGatewayId')]
-        [ValidatePattern('^vpc-[0-9a-f]{17}$')]
+        [ValidatePattern('^tgw-[0-9a-f]{17}$')]
         [string[]]
         $TransitGatewayId,
 
-        [Parameter(ParameterSetName = 'TransitGatewayId')]
+        [Parameter(ParameterSetName = 'TransitGatewayName')]
         [string]
         $TransitGatewayName,
 
@@ -74,14 +74,14 @@ function Show-TransitGatewayRouteTable
 
                 # VPC portion
                 $_vpc_id = $_.ResourceId
-                if ($_vpc = ($_vpc_lookup[$_vpc_id])) {         
-                    $_format_vpc = $_vpc | 
-                        Get-ResourceString -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plain_text 
+                if ($_vpc = ($_vpc_lookup[$_vpc_id])) {
+                    $_format_vpc = $_vpc |
+                        Get-ResourceString -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plain_text
                 }
-                else {                                          
-                    $_format_vpc = $_vpc_id                     
+                else {
+                    $_format_vpc = $_vpc_id
                 }
-                
+
                 # Eg. 999988887777 | vpc-111122223333
                 "$($_format_account) | $($_format_vpc)"
             } | Sort-Object
@@ -95,12 +95,12 @@ function Show-TransitGatewayRouteTable
 
                 # VPC portion
                 $_vpc_id = $_.ResourceId
-                if ($_vpc = ($_vpc_lookup[$_vpc_id])) {         
-                    $_format_vpc = $_vpc | 
-                        Get-ResourceString -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plain_text 
+                if ($_vpc = ($_vpc_lookup[$_vpc_id])) {
+                    $_format_vpc = $_vpc |
+                        Get-ResourceString -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plain_text
                 }
-                else {                                          
-                    $_format_vpc = $_vpc_id                     
+                else {
+                    $_format_vpc = $_vpc_id
                 }
 
                 # Eg. 999988887777 | vpc-111122223333
@@ -111,11 +111,11 @@ function Show-TransitGatewayRouteTable
 
     $_view_definition = @{
         Default = @(
-            'TransitGateway', 'TransitGatewayRouteTableId', 'Name', 
+            'TransitGateway', 'TransitGatewayRouteTableId', 'Name',
             'AssociationVpc', 'PropagationVpc', 'IsDefaultAssoc', 'IsDefaultProp'
         )
     }
-    
+
     # Apply default sort order.
     if (
         $_group_by -eq 'TransitGateway' -and
@@ -168,7 +168,7 @@ function Show-TransitGatewayRouteTable
 
         # Exit early if there are no tgw route tebles to show.
         if (-not $_trt_list) { return }
-        
+
         $_tgw_id_list = $_trt_list | Select-Object -Unique -ExpandProperty TransitGatewayId
 
         # Query TGW
@@ -179,7 +179,7 @@ function Show-TransitGatewayRouteTable
 
         # Query Associations. Save to hashtable.
         $_assoc_lookup = @{}
-        $_trt_list | ForEach-Object { 
+        $_trt_list | ForEach-Object {
             $_assoc_lookup[$_.TransitGatewayRouteTableId] = `
                 Get-EC2TransitGatewayRouteTableAssociation -Verbose:$false `
                 -TransitGatewayRouteTableId $_.TransitGatewayRouteTableId
@@ -187,7 +187,7 @@ function Show-TransitGatewayRouteTable
 
         # Query Propagations. Save to hashtable.
         $_prog_lookup = @{}
-        $_trt_list | ForEach-Object { 
+        $_trt_list | ForEach-Object {
             $_prog_lookup[$_.TransitGatewayRouteTableId] = `
                 Get-EC2TransitGatewayRouteTablePropagation -Verbose:$false `
                 -TransitGatewayRouteTableId $_.TransitGatewayRouteTableId
@@ -195,7 +195,7 @@ function Show-TransitGatewayRouteTable
 
         # Query Attachments. Save to hashtable.
         $_attach_lookup = Get-EC2TransitGatewayAttachment -Verbose:$false -Filter @{
-            Name   = 'transit-gateway-id'; 
+            Name   = 'transit-gateway-id';
             Values = $_tgw_id_list
         } | Group-Object -AsHashTable TransitGatewayAttachmentId
 

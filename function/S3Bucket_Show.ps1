@@ -284,12 +284,8 @@ function Write-BucketRegion
     try {
         foreach ($_bucket in $_bucket_list)
         {
-            $_bucket_region = (
-                Get-S3BucketLocation -Verbose:$false $_bucket.BucketName | Select-Object -ExpandProperty Value
-            )
-            $_bucket_region = (
-                [string]::IsNullOrEmpty($_bucket_region) ? 'us-east-1' : $_bucket_region
-            )
+            $_bucket_region = `
+                Get-S3HeadBucket -Verbose:$false $_bucket.BucketName | Select-Object -ExpandProperty BucketRegion
             $_bucket | Add-Member 'BucketRegion' $_bucket_region -Force
         }
     }

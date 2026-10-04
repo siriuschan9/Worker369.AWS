@@ -32,11 +32,11 @@ Register-ArgumentCompleter -ParameterName 'TransitGatewayId' -CommandName $_cmd_
     if (-not $_tgw_list) { return }
 
     $_align = `
-        $_tgw_list.RouteTableId | Select-Object -ExpandProperty Length |
+        $_tgw_list.TransitGatewayId | Select-Object -ExpandProperty Length |
         Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_tgw_list | Get-HintItem -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -Align $_align |
-    Sort-Object | Where-Object { $_ -like "$_word_to_complete*" } ｜ ForEach-Object {
+    Sort-Object | Where-Object { $_ -like "$_word_to_complete*" } | ForEach-Object {
 
         [System.Management.Automation.CompletionResult]::new(
             $_.ResourceId,    # completionText
@@ -58,22 +58,15 @@ Register-ArgumentCompleter -ParameterName 'TransitGatewayName' -CommandName $_cm
         $_fake_bound_parameters
     )
 
-    $_tgw_list = Get-EC2TransitGateway -Verbose:$false -Filter @{
-        Name   = 'tag:Name'
+    Get-EC2TransitGateway -Verbose:$false -Filter @{
+        Name = 'tag:Name'
         Values = "$_word_to_complete*"
-    }
-
-    if (-not $_tgw_list) { return }
-
-    $_align = `
-        $_tgw_list.TransitGatewayId | Select-Object -ExpandProperty Length |
-        Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
-
-    $_tgw_list | Get-HintItem -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -Align $_align |
-    Sort-Object | ForEach-Object {
+    } |
+    Select-Object -ExpandProperty Tags | Where-Object Key -eq 'Name' |
+    Select-Object -Unique -ExpandProperty Value | Sort-Object | ForEach-Object {
 
         [System.Management.Automation.CompletionResult]::new(
-            $_.ResourceId,    # completionText
+            $_,               # completionText
             $_,               # listItemText
             'ParameterValue', # resultType
             $_                # toolTip
@@ -100,7 +93,7 @@ Register-ArgumentCompleter -ParameterName 'TransitGatewayRouteTableId' -CommandN
     if (-not $_tgw_rt_list) { return }
 
     $_align = `
-        $_tgw_rt_list.RouteTableId | Select-Object -ExpandProperty Length |
+        $_tgw_rt_list.TransitGatewayRouteTableId | Select-Object -ExpandProperty Length |
         Measure-Object -Maximum | Select-Object -ExpandProperty Maximum
 
     $_tgw_rt_list | Get-HintItem -IdPropertyName 'TransitGatewayRouteTableId' -TagPropertyName 'Tags' -Align $_align |

@@ -1,4 +1,4 @@
-function Show-Fleet
+function Show-SsmFleet
 {
     [CmdletBinding()]
     [Alias('fleet_show')]
