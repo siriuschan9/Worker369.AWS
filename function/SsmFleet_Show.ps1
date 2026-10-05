@@ -1,7 +1,7 @@
 function Show-SsmFleet
 {
     [CmdletBinding()]
-    [Alias('fleet_show')]
+    [Alias('ssm_fleet_show')]
     param (
         [Parameter(Position = 0)]
         [ValidateSet('Status', 'PatchCompliance')]
@@ -195,10 +195,10 @@ function Show-SsmFleet
             Type   = 'NotEqual'
         } | ForEach-Object {
             $_attribute_dict = $_.Data['AWS:InstanceInformation'].Content[0]
-            [PSCustomObject]::new($_attribute_dict -as [hashtable])
+            [PSCustomObject]($_attribute_dict -as [hashtable])
         }
 
-        # We just be the name & PatchGroup tag of the EC2 instances.
+        # We just be the Name & PatchGroup tag of the EC2 instances.
         Write-Message -Progress $_cmdlet_name 'Retrieving EC2 Instances.'
         $_ec2_lookup = Get-EC2Instance -Verbose:$false `
             | Select-Object -ExpandProperty Instances `

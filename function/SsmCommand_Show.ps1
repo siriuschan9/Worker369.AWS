@@ -1,18 +1,22 @@
 function Show-SsmCommand
 {
     [CmdletBinding()]
-    [Alias('cmd_show')]
+    [Alias('ssm_cmd_show')]
     param (
         #[Parameter()]
         #[ValidatePattern('^i-([0-9a-f]{8}|[0-9a-f]{17})$')]
         #[string]
         #$InstanceId,
 
-        [Parameter()]
+        [Parameter(Position = 0)]
         [ValidateSet('Complete', 'Executing')]
         $ExecutionStage = 'Executing',
 
-        [Parameter(Position = 0)]
+        [int]
+        [ValidateRange(1, 10000)]
+        $First,
+
+        [Parameter(Position = 1)]
         [ValidateSet('Default')]
         [string]
         $View = 'Default',
@@ -24,10 +28,10 @@ function Show-SsmCommand
         [string]
         $GroupBy = 'ExecutionStage',
 
-        [Int[]]
+        [int[]]
         $Sort,
 
-        [Int[]]
+        [int[]]
         $Exclude,
 
         [switch]
@@ -39,6 +43,7 @@ function Show-SsmCommand
 
     # Use snake_case.
     $_execution_stage  = $ExecutionStage
+    $_first            = $First
     $_view             = $View
     $_filter           = $Filter
     $_group_by         = $GroupBy
@@ -86,30 +91,8 @@ function Show-SsmCommand
         }
     }
 
-    $_filter = $_filter + [Amazon.SimpleSystemsManagement.Model.CommandFilter]@{
-        Key   = 'ExecutionStage'
-        Value = $_execution_stage
-    }
-
-    # Manufacture the select list, sort list and project list.
-    $_select_list, $_sort_list, $_project_list = Get-QueryDefinition `
-        -SelectDefinition $_select_definition `
-        -ViewDefinition   $_view_definition `
-        -View             $_view `
-        -GroupBy          $_group_by `
-        -Sort             $_sort `
-        -Exclude          $_exclude
-
-    # A number style that display dash for zero.
-    $_num_style = [Worker369.Utility.NumberInfoSettings]::Make()
-    if ($_plain_text) {
-        $_num_style.Format.Unscaled = '#,###;#,###;-'          # undimmed dash
-    }
-    else {
-        $_num_style.Format.Unscaled = "#,###;#,###;`e[2m-`e[0m" # dimmed dash
-    }
-
-    try {
+    # Definition to stream output lazily.
+    $_stream = {
         $_next_token = $null
         do{
             Write-Message -Progress $_cmdlet_name 'Fetching Run Commands.'
@@ -122,7 +105,7 @@ function Show-SsmCommand
             # Generate output after sorting and exclusion.
             $_output = $_response.Commands `
                 | Select-Object $_select_list `
-                | Sort-Object $_sort_list `
+                | Sort-Object   $_sort_list `
                 | Select-Object $_project_list
 
             # Print out the output.
@@ -147,6 +130,65 @@ function Show-SsmCommand
             if ($_key_info.Key -eq 'Escape') {break}
 
         } while ($true)
+    }
+
+    # Definition to buffer results before printing.
+    $_buffer = {
+        Write-Message -Progress $_cmdlet_name 'Fetching Run Commands.'
+        $_output = Get-SSMCommand -Verbose:$false -Filter $_filter | Select-Object -First $_first `
+            | Select-Object $_select_list `
+            | Sort-Object   $_sort_list `
+            | Select-Object $_project_list
+
+        # Print out the output.
+        if ($global:EnableHtmlOutput) {
+            $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        }
+        else {
+            $_output | Format-Column `
+                -AlignLeft Status `
+                -GroupBy $_group_by `
+                -PlainText:$_plain_text `
+                -NoRowSeparator:$_no_row_separator
+        }
+    }
+
+    # Apply default sort order.
+    if (-not $PSBoundParameters.Keys.Contains('Exclude') -and-not $PSBoundParameters.Keys.Contains('Sort')) {
+        $_sort = @(-4) # => Sort by RequestDateTime
+    }
+
+    # Manufacture the select list, sort list and project list.
+    $_select_list, $_sort_list, $_project_list = Get-QueryDefinition `
+        -SelectDefinition $_select_definition `
+        -ViewDefinition   $_view_definition `
+        -View             $_view `
+        -GroupBy          $_group_by `
+        -Sort             $_sort `
+        -Exclude          $_exclude
+
+    # A number style that display dash for zero.
+    $_num_style = [Worker369.Utility.NumberInfoSettings]::Make()
+    if ($_plain_text) {
+        $_num_style.Format.Unscaled = '#,###;#,###;-'          # undimmed dash
+    }
+    else {
+        $_num_style.Format.Unscaled = "#,###;#,###;`e[2m-`e[0m" # dimmed dash
+    }
+
+    $_filter = $_filter + [Amazon.SimpleSystemsManagement.Model.CommandFilter]@{
+        Key   = 'ExecutionStage'
+        Value = $_execution_stage
+    }
+
+    $_mode = $PSBoundParameters.ContainsKey('First') ? 'buffer' :  'stream'
+
+    try {
+        switch ($_mode)
+        {
+            'buffer' {& $_buffer}
+            'stream' {& $_stream}
+        }
     }
     catch {
         # Remove caught exception emitted into $Error list.

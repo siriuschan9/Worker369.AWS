@@ -92,10 +92,12 @@ function Start-Ec2
 
             if ($_.State.Name -eq 'pending') {
                 Write-Warning "The instance $($_format_ec2) has already started."
+                return
             }
 
             if ($_.State.Name -eq 'running') {
                 Write-Warning "The instance $($_format_ec2) is already running."
+                return
             }
 
             # Display What-If/Confirmation prompt.

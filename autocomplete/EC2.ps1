@@ -2,7 +2,7 @@ $_cmd_lookup = @{
     InstanceId = @(
         'Start-Ec2', 'Stop-Ec2',
         'Get-Ec2SystemLog',
-        'New-Ec2CpuAlarm', 'New-ECcStatusAlarm'
+        'New-Ec2CpuAlarm', 'New-Ec2StatusAlarm'
     )
     InstanceName = @(
         'Start-Ec2', 'Stop-Ec2',

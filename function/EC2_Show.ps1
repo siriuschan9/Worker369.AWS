@@ -1,12 +1,57 @@
+function _get_alarm_summary($alarms)
+{
+    $_total    = $alarms.Count
+
+    $_ok       = 0
+    $_in_alarm = 0
+    $_no_data  = 0
+
+    # Count number of alarms in each state
+    foreach($_alarm in $alarms)
+    {
+        switch($_alarm.StateValue)
+        {
+            'OK'                { $_ok++       }
+            'INSUFFICIENT_DATA' { $_no_data++  }
+            'ALARM'             { $_in_alarm++ }
+        }
+    }
+    # 1. Show number of alarms in alarm
+    if($_in_alarm -gt 0) { return "$($_in_alarm)/$($_total) in alarm" }
+
+    # 2. Show number of alarms with no data
+    if($_no_data -gt 0)  { return "$($_no_data)/$($_total) has no data" }
+
+    # 3. Show nothing if no alarms are configured
+    if($_total -eq 0 )   { return $null }
+
+    # 4. Show total number of (ok) alarms
+    if($_ok -eq $_total) { return "$($_ok) alarm ok " }
+}
+
 function Show-Ec2
 {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'PredefinedView')]
     [Alias('ec2_show')]
     param (
-        [Parameter(Position = 0)]
-        [ValidateSet('Default', 'Network', 'Platform', 'Security', 'Sizing', 'Status', 'StorageSummary', 'StorageDetail')]
+        [Parameter(ParameterSetName = 'PredefinedView', Position = 0)]
+        [ValidateSet(
+            'Default', 'Network', 'Platform', 'Security', 'Sizing', 'Status', 'StorageSummary', 'StorageDetail'
+        )]
         [string]
         $View = 'Default',
+
+        [Parameter(ParameterSetName = 'CustomView')]
+        [ValidateSet(
+            'AlarmStatus', 'Architecture', 'AttachedVolumes', 'AvailabilityZone', 'CpuCredits',
+            'CurrentInstanceBootMode', 'Device', 'EbsStatus', 'Eni', 'EniPrivateIp', 'EniPublicIp', 'EniIpv6Address',
+            'EniSubnet', 'ImageId', 'ImageName', 'InstanceId', 'InstanceProfile', 'InstanceStatus', 'InstanceType',
+            'Ipv6Address', 'KeyName', 'Memory', 'Name', 'NetworkPerformance', 'PlatformDetails', 'PrivateIpAddress',
+            'PublicIpAddress', 'RootDeviceName', 'SecurityGroups', 'State', 'SystemStatus', 'TotalStorage', 'Volume',
+            'VolumeDelOnTerm', 'VolumeEncryptionKey', 'VolumeSize', 'Vpc'
+        )]
+        [string[]]
+        $CustomView,
 
         [Amazon.EC2.Model.Filter[]]
         $Filter,
@@ -30,6 +75,7 @@ function Show-Ec2
 
     # Use snake_case.
     $_view             = $View
+    $_custom_view      = $CustomView
     $_filter           = $Filter
     $_group_by         = $GroupBy
     $_sort             = $Sort
@@ -55,7 +101,7 @@ function Show-Ec2
             'ImageId', 'ImageName'
         )
         Status = @(
-            'InstanceId', 'Name', 'State', 'SystemStatus', 'InstanceStatus', 'AlarmStatus'
+            'InstanceId', 'Name', 'State', 'SystemStatus', 'InstanceStatus', 'EbsStatus', 'AlarmStatus'
         )
         Security = @(
             'InstanceId', 'Name', 'KeyName', 'InstanceProfile', 'SecurityGroups'
@@ -74,7 +120,8 @@ function Show-Ec2
     # Hashtable for Select-Object.
     $_select_definition = @{
         AlarmStatus = {
-
+            $_alarm_summary = _get_alarm_summary($_alarm_lookup[$_.InstanceId])
+            New-Checkbox -PlainText:$_plain_text -Description $_alarm_summary ($_alarm_summary -match '\d{1,} alarm ok')
         }
         Architecture = {
             $_.Architecture
@@ -103,6 +150,10 @@ function Show-Ec2
                 $_device_name = $_.DeviceName
                 "$($_device_name -eq $_root_device_name ? '[ R ]' : '[   ]') $($_device_name)"
             }
+        }
+        EbsStatus = {
+            $_status = $_status_lookup[$_.InstanceId].AttachedEbsStatus.Status
+            New-Checkbox -PlainText:$_plain_text -Description $_status ($_status -eq 'ok')
         }
         Eni = {
             $_.NetworkInterfaces | ForEach-Object {$_eni_lookup[$_.NetworkInterfaceId]} |
@@ -207,7 +258,8 @@ function Show-Ec2
             $_.IamInstanceProfile.Arn -replace '^arn:aws:iam::\d{12}:instance-profile\/'
         }
         InstanceStatus = {
-            $_status_lookup[$_.InstanceId].Status.Status
+            $_status = $_status_lookup[$_.InstanceId].Status.Status
+            New-Checkbox -PlainText:$_plain_text -Description $_status ($_status -eq 'ok')
         }
         InstanceType = {
             $_.InstanceType
@@ -246,14 +298,16 @@ function Show-Ec2
             }
         }
         State = {
-            $_.State.Name.Value
+            $_state = $_.State.Name.Value
+            New-Checkbox -PlainText:$_plain_text -Description $_state ($_state -eq 'running')
         }
         Subnet = {
             $_subnet_lookup[$_.SubnetId] |
             Get-ResourceString -IdPropertyName 'SubnetId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
         SystemStatus = {
-            $_status_lookup[$_.InstanceId].SystemStatus.Status
+            $_status = $_status_lookup[$_.InstanceId].SystemStatus.Status
+            New-Checkbox -PlainText:$_plain_text -Description $_status ($_status -eq 'ok')
         }
         VCpu = {
             $_type_lookup[$_.InstanceType].VCpuInfo.DefaultVCpus
@@ -300,6 +354,24 @@ function Show-Ec2
         }
     }
 
+    $_network_attributes = `
+        [System.Collections.Generic.HashSet[string]]($_view_definition['Network'])
+    $_security_attributes = `
+        [System.Collections.Generic.HashSet[string]]($_view_definition['Network'] + $_view_definition['Security'])
+    $_sizing_attributes = `
+        [System.Collections.Generic.HashSet[string]]($_view_definition['Sizing'])
+    $_status_attributes = `
+        [System.Collections.Generic.HashSet[string]]($_view_definition['Status'])
+    $_storage_attributes  = `
+        [System.Collections.Generic.HashSet[string]](
+            $_view_definition['StorageSummary'] + $_view_definition['StorageDetail'])
+
+    if ($_custom_view = ($_custom_view ?? [string[]]@()))
+    {
+        $_view = 'Custom'
+        $_view_definition['Custom'] = $_custom_view
+    }
+
     # Declare hashtables
     $_alarm_lookup  = @{} # Hashtable to lookup cloudwatch alarm by Instance ID
     $_credit_lookup = @{} # Hashtable to lookup instance credit specification
@@ -318,7 +390,7 @@ function Show-Ec2
         # Get all EC2
         Write-Message -Progress $_cmdlet_name 'Retrieving EC2 information.'
         $_ec2_list = Get-EC2Instance -Verbose:$false -Filter $_filter | Select-Object -ExpandProperty Instances
-        
+
         $_instance_id_list   = $_ec2_list.InstanceId
         $_instance_type_list = $_ec2_list.InstanceType | Select-Object -Unique
         $_volume_id_list     = $_ec2_list.BlockDeviceMappings.Ebs.VolumeId | Select-Object -Unique
@@ -340,55 +412,66 @@ function Show-Ec2
             Group-Object -AsHashTable SubnetId
 
         # Get all ENI
-        if ($_view -in @('Network')) {
+        if ($_view -in @('Network') -or $_network_attributes.Overlaps($_custom_view)) {
             Write-Message -Progress $_cmdlet_name 'Retrieving ENI information.'
-            $_eni_lookup = `
-                Get-EC2NetworkInterface -Verbose:$false -Filter @{Name = 'network-interface-id'; Values = $_eni_id_list} |
+            $_eni_lookup =
+                Get-EC2NetworkInterface -Verbose:$false -Filter @{
+                    Name   = 'network-interface-id'
+                    Values = $_eni_id_list} |
                 Group-Object -AsHashTable NetworkInterfaceId
         }
         # Get all Security Groups
-        if ($_view -in @('Network', 'Security')) {
+        if ($_view -in @('Network', 'Security') -or $_security_attributes.Overlaps($_custom_view)){
             Write-Message -Progress $_cmdlet_name 'Retrieving ENI information.'
             $_sg_lookup = `
                 Get-EC2SecurityGroup -Verbose:$false -Filter @{Name = 'group-id'; Values = $_sg_id_list} |
                 Group-Object -AsHashTable GroupId
         }
         # Get all instances' credit specifications
-        if ($_view -in @('Sizing')) {
+        if ($_view -in @('Sizing') -or $_sizing_attributes.Overlaps($_custom_view)) {
             Write-Message -Progress $_cmdlet_name 'Retrieving CPU credit information.'
             $_credit_lookup = `
                 Get-EC2CreditSpecification -Verbose:$false $_instance_id_list |
                 Group-Object -AsHashTable InstanceId
         }
         # Get all instance types
-        if ($_view -in @('Sizing')) {
+        if ($_view -in @('Sizing') -or $_sizing_attributes.Overlaps($_custom_view)) {
             Write-Message -Progress $_cmdlet_name 'Retrieving instance type information.'
             $_type_lookup = `
                 Get-EC2InstanceType -Verbose:$false -Filter @{Name = 'instance-type'; Values = $_instance_type_list} |
                 Group-Object -AsHashTable InstanceType
         }
         # Get all instances' statuses
-        if ($_view -in @('Status')) {
+        if ($_view -in @('Status') -or $_status_attributes.Overlaps($_custom_view)) {
             Write-Message -Progress $_cmdlet_name 'Retrieving status information.'
             $_status_lookup = `
                 Get-EC2InstanceStatus -Verbose:$false $_instance_id_list |
                 Group-Object -AsHashTable InstanceId
         }
-        if ($_view -in @('StorageDetail', 'StorageSummary')) {
+        if ($_view -in @('StorageDetail', 'StorageSummary') -or $_storage_attributes.Overlaps($_custom_view)) {
             # Get all EBS
             Write-Message -Progress $_cmdlet_name 'Retrieving EBS information.'
             $_ebs_lookup = `
                 Get-EC2Volume -Verbose:$false -Filter @{Name = 'volume-id'; Values = $_volume_id_list} |
                 Group-Object -AsHashTable VolumeId
         }
-        # Get all alarms
-        Write-Message -Progress $_cmdlet_name 'Retrieving alarm information.'
-        # $_metric_name_list = `
-        #     Get-CWMetricList -Verbose:$true -Namespace 'AWS/EC2' | Select-Object -Unique -ExpandProperty MetricName
-        # $_alarm_list = foreach($_metric_name in $_metric_name_list)
-        # {
-        #     $_alarms_for_this_metric = Get-CWAlarmForMetric -Verbose:$false -MetricName $_metric_name
-        # }
+
+        if ($_view -eq @('Status') -or $_status_attributes.Overlaps($_custom_view)) {
+            # Get all alarms
+            Write-Message -Progress $_cmdlet_name 'Retrieving alarm information.'
+            # $_metric_name_list = `
+            #     Get-CWMetricList -Verbose:$true -Namespace 'AWS/EC2' | Select-Object -Unique -ExpandProperty MetricName
+            # $_alarm_list = foreach($_metric_name in $_metric_name_list)
+            # {
+            #     $_alarms_for_this_metric = Get-CWAlarmForMetric -Verbose:$false -MetricName $_metric_name
+            # }
+            $_alarm_lookup = Get-CWAlarm -Verbose:$false | Select-Object -ExpandProperty MetricAlarms | Where-Object {
+                ($_.Dimensions | Select-Object -ExpandProperty Name) -contains 'InstanceId'
+            } |
+            Group-Object -AsHashTable @{Expression = {
+                $_.Dimensions | Where-Object Name -eq 'InstanceId' | Select-Object -ExpandProperty Value
+            }}
+        }
     }
     catch {
         # Remove caught exception emitted into $Error list.
@@ -416,6 +499,7 @@ function Show-Ec2
     }
     else {
         $_output | Format-Column `
+            -AlignLeft 'State', 'InstanceStatus', 'SystemStatus', 'EbsStatus', 'AlarmStatus' `
             -AlignRight 'VolumeSize', 'VolumeDelOnTerm' `
             -GroupBy $_group_by `
             -PlainText:$_plain_text `

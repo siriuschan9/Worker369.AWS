@@ -97,6 +97,7 @@ function Stop-Ec2
 
             if ($_.State.Name -eq 'stopped') {
                 Write-Warning "The instance $($_format_ec2) is already stopped."
+                return
             }
 
             # Display What-If/Confirmation prompt.
