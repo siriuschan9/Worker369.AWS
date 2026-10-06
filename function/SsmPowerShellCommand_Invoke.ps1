@@ -1,7 +1,7 @@
-function Invoke-SsmShellCommand
+function Invoke-SsmPowerShellCommand
 {
     [CmdletBinding(DefaultParameterSetName = 'SpecificTargets',SupportsShouldProcess, ConfirmImpact = 'High')]
-    [Alias('ssm_sh')]
+    [Alias('ssm_pwsh')]
     param (
         [Parameter(
             ParameterSetName = 'SpecificTargets', Mandatory, Position = 0,
@@ -10,7 +10,7 @@ function Invoke-SsmShellCommand
         $InstanceId,
 
         [Parameter(ParameterSetName = 'SpecificPlatforms')]
-        [ValidateSet('Linux', 'MacOS')]
+        [ValidateSet('Windows', 'Linux')]
         [string[]]
         $PlatformType,
 
@@ -105,7 +105,7 @@ function Invoke-SsmShellCommand
 }
 
 # InstanceId
-Register-ArgumentCompleter -ParameterName 'InstanceId' -CommandName 'Invoke-SsmShellCommand' -ScriptBlock {
+Register-ArgumentCompleter -ParameterName 'InstanceId' -CommandName 'Invoke-SsmPowerShellCommand' -ScriptBlock {
 
     param(
         $_command_name,
@@ -117,7 +117,7 @@ Register-ArgumentCompleter -ParameterName 'InstanceId' -CommandName 'Invoke-SsmS
 
     $_instance_list = Get-SSMInstanceInformation -Verbose:$false -Filter @{
         Key    = 'PlatformTypes'
-        Values = @('Linux', 'MacOS')
+        Values = @('Linux', 'Windows')
     } | Where-Object { $_.InstanceId -like "$_word_to_complete*" }
 
     if (-not $_instance_list) { return }

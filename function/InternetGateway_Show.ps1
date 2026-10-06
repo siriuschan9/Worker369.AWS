@@ -37,7 +37,7 @@ function Show-InternetGateway
     $_filter           = $Filter
     $_sort             = $Sort
     $_exclude          = $Exclude
-    $_plaintext        = $PlainText.IsPresent
+    $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
     # Apply default sort order.

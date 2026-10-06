@@ -183,6 +183,8 @@ function Show-SsmCommand
 
     $_mode = $PSBoundParameters.ContainsKey('First') ? 'buffer' :  'stream'
 
+    if ($_execution_stage -eq 'Executing') {$_mode = 'buffer'}
+
     try {
         switch ($_mode)
         {
