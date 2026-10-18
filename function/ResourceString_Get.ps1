@@ -1,5 +1,3 @@
- using namespace Worker369.AWS
-
 <#
 .SYNOPSIS
 The cmdlet generates an AWS Resource String object from a raw AWS Object.
@@ -102,14 +100,12 @@ function Get-ResourceString
 
             if ($_param_set -eq 'NameProperty') {
                 $_resource_name = $_input_object.$_name_property_name
+            } else {
+                $_resource_name = $_input_object.$_tag_property_name `
+                    | Where-Object Key -eq 'Name' `
+                    | Select-Object -ExpandProperty Value
             }
-            else {
-                $_resource_name = $_input_object.$_tag_property_name |
-                    Where-Object Key -eq 'Name' |
-                    Select-Object -ExpandProperty Value
-            }
-
-            [ResourceString]::new($_resource_id, $_resource_name, $_format, $_plain_text)
+            [Worker369.AWS.ResourceString]::new($_resource_id, $_resource_name, $_format, $_plain_text)
         }
         catch
         {

@@ -6,37 +6,40 @@ function Show-InternetGateway
     [Alias('igw_show')]
     [CmdletBinding()]
     param(
+        [Amazon.EC2.Model.Filter[]]
+        $Filter,
+
         [Parameter(Position = 0)]
         [ValidateSet('Default')]
         [string]
         $View = 'Default',
 
-        [Parameter()]
-        [Amazon.EC2.Model.Filter[]]
-        $Filter,
-
-        [Parameter()]
         [Int[]]
         $Sort,
 
-        [Parameter()]
         [Int[]]
         $Exclude,
 
-        [Parameter()]
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
-        [Parameter()]
         [switch]
         $NoRowSeparator
     )
 
     # Use snake_case.
-    $_view             = $View
     $_filter           = $Filter
+    $_view             = $View
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -91,8 +94,8 @@ function Show-InternetGateway
             $_.Tags | Where-Object Key -eq 'Name' | Select-Object -ExpandProperty Value
         }
         AttachedToVpc = {
-            $_vpc_lookup[$_.InternetGatewayId] | Get-ResourceString `
-                -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plaintext
+            $_vpc_lookup[$_.InternetGatewayId] |
+            Get-ResourceString -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plaintext
         }
     }
 
@@ -109,13 +112,17 @@ function Show-InternetGateway
         -Exclude          $_exclude
 
     # Generate output after sorting and exclusion.
-    $_output = $_igw_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = $_igw_list `
+        | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list | Where-Object $_where
 
-    # Print out the output.
-    if ($global:EnableHtmlOutput) {
-        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
-    }
-    else {
-        $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    # Print out the output. If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {
+        $_output
+    } else {
+        if ($global:EnableHtmlOutput) {
+            $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        } else {
+            $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+        }
     }
 }

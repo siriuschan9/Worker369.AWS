@@ -5,7 +5,7 @@ namespace Worker369.AWS;
 
 public class HintItem : IComparable, IComparable<HintItem>
 {
-    public static bool   SortByName { get; set; } = true;
+    public static bool SortByName { get; set; } = true;
 
     public string ResourceId   { get; set; }
     public string ResourceName { get; set; }

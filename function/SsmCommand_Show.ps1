@@ -119,7 +119,7 @@ function Show-SsmCommand
                     -PlainText:$_plain_text `
                     -NoRowSeparator:$_no_row_separator
             }
-            if ($_response.Commands.Count -eq 0 -or -not ($_next_token = $_response.NextToken)) { break }
+            if (-not ($_next_token = $_response.NextToken)) { break }
 
             Write-Host 'There are more results. Press Enter to Continue. Press Esc to Stop.'
 

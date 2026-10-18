@@ -89,7 +89,7 @@ function Invoke-SsmPowerShellCommand
 
             $_response = Send-SSMCommand -Verbose:$false `
                 -Target @{Key = 'InstanceIds'; Values = $_instance_id_list} `
-                -DocumentName 'AWS-RunShellScript' `
+                -DocumentName 'AWS-RunPowerShellScript' `
                 -TimeoutSecond $_delivery_timeout `
                 -Parameter $_parameters
         }
@@ -100,6 +100,10 @@ function Invoke-SsmPowerShellCommand
             # Re-throw caught exception.
             $PSCmdlet.ThrowTerminatingError($_)
         }
+        if (-not $Global:SsmCommandHistory) {
+            $Global:SsmCommandHistory = [System.Collections.ArrayList]::new()
+        }
+        $Global:SsmCommandHistory.Insert(0, $_response.CommandId)
         $_response | Select-Object CommandId
     }
 }

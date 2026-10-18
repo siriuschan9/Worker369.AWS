@@ -100,6 +100,10 @@ function Invoke-SsmShellCommand
             # Re-throw caught exception.
             $PSCmdlet.ThrowTerminatingError($_)
         }
+        if (-not $Global:SsmCommandHistory) {
+            $Global:SsmCommandHistory = [System.Collections.ArrayList]::new()
+        }
+        $Global:SsmCommandHistory.Insert(0, $_response.CommandId)
         $_response | Select-Object CommandId
     }
 }

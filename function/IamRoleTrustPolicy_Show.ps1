@@ -14,8 +14,10 @@ function Show-IamRoleTrustPolicy
         $_role_name = $RoleName
 
         try {
-            $_trust = Get-IAMRole -Verbose:$false $_role_name | Select-Object -ExpandProperty AssumeRolePolicyDocument
-            [System.Web.HttpUtility]::UrlDecode($_trust) | Format-Json
+            Get-IAMRole -Verbose:$false $_role_name |
+            Select-Object -ExpandProperty AssumeRolePolicyDocument |
+            Remove-UrlEncoding |
+            Format-Json
         }
         catch {
             # Remove caught exception emitted into $Error list.

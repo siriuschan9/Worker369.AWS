@@ -18,23 +18,14 @@ function Show-IamPolicyContent
         $_policy_arn = $PolicyArn
         $_version_id = $VersionId
 
-        if (-not $_version_id)
-        {
-            try {
+        try {
+            if (-not $_version_id) {
                 $_version_id = (Get-IAMPolicy -Verbose:$false $_policy_arn).DefaultVersionId
             }
-            catch {
-                # Remove caught excetion emitted into $Error list.
-                Pop-ErrorRecord $_
-
-                # Report error as non-terminating.
-                $PSCmdlet.WriteError($_)
-            }
-        }
-
-        try {
-            $_document = (Get-IAMPolicyVersion -Verbose:$false -VersionId $_version_id $_policy_arn).Document
-            [System.Web.HttpUtility]::UrlDecode($_document) | Format-Json
+            Get-IAMPolicyVersion -Verbose:$false -VersionId $_version_id $_policy_arn |
+            Select-Object -ExpandProperty Document |
+            Remove-UrlEncoding |
+            Format-Json
         }
         catch {
             # Remove caught excetion emitted into $Error list.

@@ -17,11 +17,15 @@ function Show-VpcCidrMap
         [string]
         $IPVersion = 'Both',
 
-        [Parameter()]
+        [scriptblock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
-        [Parameter()]
         [switch]
         $NoRowSeparator
     )
@@ -37,11 +41,14 @@ function Show-VpcCidrMap
     PROCESS
     {
         # Use snake_case.
-        $_vpc_id            = $VpcId
-        $_vpc_name          = $VpcName
-        $_ip_version        = $IPVersion
-        $_plain_text        = $PlainText.IsPresent
-        $_no_rows_separator = $NoRowSeparator.IsPresent
+        $_vpc_id           = $VpcId
+        $_vpc_name         = $VpcName
+        $_group_by         = 'VpcCidr'
+        $_where            = $Where
+        $_pass_thru        = $PassThru.IsPresent
+        $_ip_version       = $IPVersion
+        $_plain_text       = $PlainText.IsPresent
+        $_no_row_separator = $NoRowSeparator.IsPresent
 
         # Configure the filter to query the VPC.
         $_filter_name  = $_param_set -eq 'VpcId' ? 'vpc-id' : 'tag:Name'
@@ -244,14 +251,24 @@ function Show-VpcCidrMap
             }
         }
 
-        # Print out the Cidr Maps - This is a list of Cidr Nodes grouped by the VPC CIDR block.
-        if ($global:EnableHtmlOutput) {
-            $_results | Format-Html -GroupBy VpcCidr | Remove-PSStyle
-        }
-        else {
-            $_results | Format-Column `
-                -GroupBy VpcCidr -AlignLeft Allocated -AlignRight PrefixLength `
-                -PlainText:$_plain_text -NoRowSeparator:$_no_rows_separator `
+        $_output = $_results.ToArray() | Where-Object $_where
+
+        # Print out the output. If -PassThru, put the objects in the pipeline.
+        if ($_pass_thru) {
+            $_output
+        } else {
+            if ($global:EnableHtmlOutput) {
+                $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+            } else {
+                $_align_left  = @('Allocated')
+                $_align_right = @('PrefixLength')
+                $_output | Format-Column `
+                    -AlignLeft $_align_left `
+                    -AlignRight $_align_right `
+                    -GroupBy $_group_by `
+                    -PlainText:$_plain_text `
+                    -NoRowSeparator:$_no_row_separator
+            }
         }
     }
 }

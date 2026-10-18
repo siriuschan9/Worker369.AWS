@@ -66,6 +66,12 @@ function Show-Ec2
         [Int[]]
         $Exclude,
 
+        [scriptblock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -80,6 +86,8 @@ function Show-Ec2
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -141,7 +149,6 @@ function Show-Ec2
         Device = {
             $_sort_expr = @{Expression = {$_.Attachment.DeviceIndex}}
             $_map_expr  = { $_.Attachment.DeviceIndex }
-
             $_.NetworkInterfaces | Sort-Object $_sort_expr | ForEach-Object $_map_expr
         }
         DeviceName = {
@@ -318,9 +325,13 @@ function Show-Ec2
         }
         RootVolume = {
             $_root_device_name = $_.RootDeviceName
-            $_root_volume_id = ($_.BlockDeviceMappings | Where-object {$_.DeviceName -eq $_root_device_name}).Ebs.VolumeId
+            $_root_volume_id = (
+                $_.BlockDeviceMappings | Where-object {$_.DeviceName -eq $_root_device_name}
+            ).Ebs.VolumeId
+
             $_root_volume = $_ebs_lookup[$_root_volume_id]
-            $_root_volume | Get-ResourceString -IdPropertyName 'VolumeId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+            $_root_volume |
+            Get-ResourceString -IdPropertyName 'VolumeId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
         TotalStorage = {
             $_total = 0
@@ -491,16 +502,18 @@ function Show-Ec2
         -Exclude          $_exclude
 
     # Generate output after sorting and exclusion.
-    $_output = $_ec2_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = $_ec2_list `
+        | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list | Where-Object $_where
 
-    # Print out the output.
-    if ($global:EnableHtmlOutput) {
-        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
-    }
-    else {
+    # Print out the output. If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {
+        $_output
+    } else {
+        $_align_left  = @('State', 'InstanceStatus', 'SystemStatus', 'EbsStatus', 'AlarmStatus', 'VolumeEncryptionKey')
+        $_align_right = @('VolumeSize', 'VolumeDelOnTerm')
         $_output | Format-Column `
-            -AlignLeft 'State', 'InstanceStatus', 'SystemStatus', 'EbsStatus', 'AlarmStatus' `
-            -AlignRight 'VolumeSize', 'VolumeDelOnTerm' `
+            -AlignLeft $_align_left `
+            -AlignRight $_align_right `
             -GroupBy $_group_by `
             -PlainText:$_plain_text `
             -NoRowSeparator:$_no_row_separator

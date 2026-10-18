@@ -3,7 +3,6 @@ function Show-KmsKey
     [Alias('kms_show')]
     [CmdletBinding()]
     param (
-
         [Parameter()]
         [ValidateSet('ALL', 'AWS', 'CUSTOMER')]
         [string]
@@ -24,6 +23,12 @@ function Show-KmsKey
         [Int[]]
         $Exclude,
 
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -36,6 +41,8 @@ function Show-KmsKey
     $_group_by           = $GroupBy
     $_sort               = $Sort
     $_exclude            = $Exclude
+    $_where              = $Where
+    $_pass_thru          = $PassThru.IsPresent
     $_plain_text         = $PlainText.IsPresent
     $_no_row_separator   = $NoRowSeparator.IsPresent
     $_key_manager_filter = switch ($KeyManager)
@@ -110,22 +117,18 @@ function Show-KmsKey
     }
 
     # If there are no keys to show, exit early.
-    if (-not $_key_list) {
-        return
-    }
+    if (-not $_key_list) { return }
 
     # Create a lookup for aliases.
     $_alias_lookup = @{}
-    foreach ($_key in $_key_list)
-    {
+    foreach ($_key in $_key_list) {
         $_alias_lookup[$_key.KeyId] = `
             $_alias_list | Where-Object TargetKeyId -eq $_key.KeyId | Select-Object -ExpandProperty AliasName
     }
 
     # Create a lookup for key status.
     $_enabled_lookup = @{}
-    foreach ($_key in $_key_list)
-    {
+    foreach ($_key in $_key_list) {
         $_enabled_lookup[$_key.KeyId] = $_key.KeyState -eq 'Enabled'
     }
 
@@ -148,20 +151,20 @@ function Show-KmsKey
         -Exclude          $_exclude
 
     # Generate output after sorting and exclusion.
-    $_output = $_key_list |
-        Select-Object $_select_list |
-        Sort-Object $_sort_list |
-        Select-Object $_project_list |
-        Where-Object $_key_manager_filter
+    $_output = $_key_list `
+        | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list `
+        | Where-Object $_key_manager_filter | Where-Object $_where
 
-    # Print out the output.
-    if ($global:EnableHtmlOutput) {
-        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
-    }
-    else {
+    # Print out the output. If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {
+        $_output
+    } else {
+        $_align_left  = @('KeyState')
+        $_align_right = @()
         $_output | Format-Column `
+            -AlignLeft $_align_left `
+            -AlignRight $_align_right `
             -GroupBy $_group_by `
-            -AlignLeft KeyState `
             -PlainText:$_plain_text `
             -NoRowSeparator:$_no_row_separator
     }

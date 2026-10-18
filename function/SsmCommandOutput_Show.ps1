@@ -3,7 +3,7 @@ function Show-SsmCommandOutput
     [CmdletBinding()]
     [Alias('ssm_cmd_output_show')]
     param (
-        [Parameter(Mandatory, Position = 0)]
+        [Parameter(Position = 0)]
         [ValidatePattern('[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}')]
         [string]
         $CommandId,
@@ -79,11 +79,24 @@ function Show-SsmCommandOutput
         }
     }
 
+    if (-not $_command_id -and $Global:SsmCommandHistory -is [ArrayList] -and $Global:SsmCommandHistory.Count -gt 0) {
+        $_command_id = $Global:SsmCommandHistory[0]
+    }
+
+    if (-not $_command_id) {
+        $PSCmdlet.WriteError(
+            'There are no Command IDs in $SsmCommandHistory.' +
+            'Please specify a Command ID using the CommandId parameter.')
+        return
+    }
+
     # We use splatting cos we want to dynamically add InstanceId if it is specified from the caller.
     $_params = @{Verbose = $false; CommandId = $_command_id}
 
     # Add InstanceId only if it has been specified by the caller.
-    if ($PSBoundParameters.ContainsKey('InstanceId')) { $_params['InstanceId'] = $_instance_id }
+    if ($PSBoundParameters.ContainsKey('InstanceId')) {
+        $_params['InstanceId'] = $_instance_id
+    }
 
     try {
         # We list out the invocations, but we will only need the list of Instance ID for this API.

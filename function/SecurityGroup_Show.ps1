@@ -7,11 +7,6 @@ function Show-SecurityGroup
     [CmdletBinding(DefaultParameterSetName = 'None')]
     [Alias('sg_show')]
     param (
-        [Parameter(Position = 0)]
-        [ValidateSet('Default', 'ENI', 'Quota')]
-        [string]
-        $View = 'Default',
-
         [Parameter(ParameterSetName = 'VpcId')]
         [ValidatePattern('^vpc-[0-9a-f]{17}$')]
         [string[]]
@@ -24,6 +19,11 @@ function Show-SecurityGroup
         [Amazon.EC2.Model.Filter[]]
         $Filter,
 
+        [Parameter(Position = 0)]
+        [ValidateSet('Default', 'ENI', 'Quota')]
+        [string]
+        $View = 'Default',
+
         [ValidateSet('Vpc', $null)]
         [string]
         $GroupBy = 'Vpc',
@@ -34,6 +34,12 @@ function Show-SecurityGroup
         [Int[]]
         $Exclude,
 
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -42,13 +48,15 @@ function Show-SecurityGroup
     )
 
     # Use snake_case.
-    $_view             = $View
     $_vpc_id           = $VpcId
     $_vpc_name         = $VpcName
     $_filter           = $Filter
+    $_view             = $View
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -60,8 +68,7 @@ function Show-SecurityGroup
             'Vpc', 'GroupId', 'GroupName', 'Tag:Name', 'InboundRules', 'OutboundRules', 'Description', 'ENI'
         )
         Quota = @(
-            'Vpc', 'GroupId', 'GroupName', 'Tag:Name',
-            'InboundIpv4', 'InboundIpv6', 'OutboundIpv4', 'OutboundIpv6'
+            'Vpc', 'GroupId', 'GroupName', 'Tag:Name', 'InboundIpv4', 'InboundIpv6', 'OutboundIpv4', 'OutboundIpv6'
         )
     }
 
@@ -81,8 +88,9 @@ function Show-SecurityGroup
         }
         ENI = {
             $_my_group_id = $_.GroupId
-            $_eni_list | Where-Object {$_.Groups.GroupId -contains $_my_group_id} | Get-ResourceString `
-                -IdPropertyName 'NetworkInterfaceId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+            $_eni_list |
+            Where-Object {$_.Groups.GroupId -contains $_my_group_id} |
+            Get-ResourceString -IdPropertyName 'NetworkInterfaceId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
         GroupId = {
             $_.GroupId
@@ -93,37 +101,31 @@ function Show-SecurityGroup
         InboundIpv4 = {
             $_num_value = $_inbound_ipv4_lookup[$_.GroupId]
             $_num_style = $_plain_text ? $_quota_plain : $_quota_style
-
             New-NumberInfo -FormatSettings $_num_style $_num_value
         }
         InboundIpv6 = {
             $_num_value = $_inbound_ipv6_lookup[$_.GroupId]
             $_num_style = $_plain_text ? $_quota_plain : $_quota_style
-
             New-NumberInfo -FormatSettings $_num_style $_num_value
         }
         InboundRules = {
             $_num_inbound_rules = $_inbound_rules_lookup[$_.GroupId]
             $_num_style         = $_plain_text ? $_counter_plain : $_counter_style
-
             New-NumberInfo -FormatSettings $_num_style $_num_inbound_rules
         }
         OutboundIpv4 = {
             $_num_value = $_outbound_ipv4_lookup[$_.GroupId]
             $_num_style = $_plain_text ? $_quota_plain : $_quota_style
-
             New-NumberInfo -FormatSettings $_num_style $_num_value
         }
         OutboundIpv6 = {
             $_num_value = $_outbound_ipv6_lookup[$_.GroupId]
             $_num_style = $_plain_text ? $_quota_plain : $_quota_style
-
             New-NumberInfo -FormatSettings $_num_style $_num_value
         }
         OutboundRules = {
             $_num_outbound_rules = $_outbound_rules_lookup[$_.GroupId]
             $_num_style          = $_plain_text ? $_counter_plain : $_counter_style
-
             New-NumberInfo -FormatSettings $_num_style $_num_outbound_rules
         }
         Vpc = {
@@ -186,7 +188,7 @@ function Show-SecurityGroup
         $_pl_list = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
             Name = 'prefix-list-id'
             Values = (
-                @($_sg_list.IpPermissions.PrefixListIds.Id) + @($_sg_list.IpPermissionsEgress.PrefixListIds.Id) | 
+                @($_sg_list.IpPermissions.PrefixListIds.Id) + @($_sg_list.IpPermissionsEgress.PrefixListIds.Id) |
                 Select-Object -Unique
             ) ?? @()
         }
@@ -279,13 +281,13 @@ function Show-SecurityGroup
         $_ingress_sg   = $_inbound_rules.UserIdGroupPairs.GroupId.Count
         $_ingress_pl   = $_inbound_rules.PrefixListIds.Id.Count
 
-        $_ingress_pl4   = $_inbound_rules.PrefixListIds.Id | Where-Object { $null -ne $_ } | ForEach-Object {
+        $_ingress_pl4 = $_inbound_rules.PrefixListIds.Id | Where-Object { $null -ne $_ } | ForEach-Object {
             $_pl_lookup[$_]
         } |
         Where-Object AddressFamily -eq 'IPv4' | Select-Object -ExpandProperty MaxEntries |
         Measure-Object -Sum | Select-Object -ExpandProperty Sum
 
-        $_ingress_pl6   = $_inbound_rules.PrefixListIds.Id | Where-Object { $null -ne $_ } | ForEach-Object {
+        $_ingress_pl6 = $_inbound_rules.PrefixListIds.Id | Where-Object { $null -ne $_ } | ForEach-Object {
             $_pl_lookup[$_]
         } |
         Where-Object AddressFamily -eq 'IPv6' | Select-Object -ExpandProperty MaxEntries |
@@ -338,14 +340,18 @@ function Show-SecurityGroup
         -Exclude          $_exclude
 
     # Generate output after sorting and exclusion.
-    $_output = $_sg_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = $_sg_list `
+        | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list | Where-Object $_where
 
-    # Print out the output.
-    if ($global:EnableHtmlOutput) {
-        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
-    }
-    else {
-        $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    # Print out the output. If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {
+        $_output
+    } else {
+        if ($global:EnableHtmlOutput) {
+            $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        } else {
+            $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+        }
     }
 }
 

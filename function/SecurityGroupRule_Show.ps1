@@ -18,6 +18,10 @@ function Show-SecurityGroupRule
         [string]
         $TagName,
 
+        [Parameter(ParameterSetName = 'GroupName', Position = 0)]
+        [string]
+        $GroupName,
+
         [Parameter()]
         [ValidateSet('IPv4', 'IPv6', '_')]
         [string]
@@ -38,6 +42,12 @@ function Show-SecurityGroupRule
         [Int[]]
         $Exclude,
 
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -50,10 +60,13 @@ function Show-SecurityGroupRule
 
     # Use snake_case.
     $_sg_id             = $GroupId
+    $_sg_name           = $GroupName
     $_tag_name          = $TagName
     $_group_by          = $GroupBy
     $_sort              = $Sort
     $_exclude           = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text        = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -63,6 +76,7 @@ function Show-SecurityGroupRule
     # Configure the filter to query the Security Group.
     if (
         -not $PSBoundParameters.ContainsKey('GroupId') -and
+        -not $PSBoundParameters.ContainsKey('GroupName') -and
         -not $PSBoundParameters.ContainsKey('TagName')
     ) {
         $_default_sg = Get-DefaultSecurityGroup -Raw
@@ -78,11 +92,22 @@ function Show-SecurityGroupRule
         }
         $_filter_name  = 'group-id'
         $_filter_value = $_default_sg.GroupId
-    }
-    else
-    {
-        $_filter_name  = $_param_set -eq 'GroupId' ? 'group-id' : 'tag:Name'
-        $_filter_value = $_param_set -eq 'GroupId' ? $_sg_id    : $_tag_name
+    } else {
+        switch ($_param_set)
+        {
+            'GroupId' {
+                $_filter_name  = 'group-id'
+                $_filter_value = $_sg_id
+            }
+            'GroupName' {
+                $_filter_name  = 'group-name'
+                $_filter_value = $_sg_name
+            }
+            'TagName' {
+                $_filter_name  = 'tag:Name'
+                $_filter_value = $_tag_name
+            }
+        }
     }
 
     try {
@@ -151,7 +176,7 @@ function Show-SecurityGroupRule
 
         # Query prefix lists.
         $_pl_lookup = Get-EC2ManagedPrefixList -Verbose:$false -Filter @{
-            Name = 'prefix-list-id'
+            Name   = 'prefix-list-id'
             Values = $_sgr_list.PrefixListId ?? @()
         } | Group-Object -AsHashTable PrefixListId
 
@@ -163,7 +188,6 @@ function Show-SecurityGroupRule
             $_pl_cidr_list = `
                 Get-EC2ManagedPrefixListEntry -Verbose:$false -PrefixListId $_pl_id |
                 Select-Object -ExpandProperty Cidr
-
             $_pl_entries_lookup.Add($_pl_id, $_pl_cidr_list)
         }
     }
@@ -225,8 +249,7 @@ function Show-SecurityGroupRule
 
                 if ($_pl.AddressFamily -eq 'IPv4') {
                     $_pl_entries | New-IPv4Subnet | Sort-Object
-                }
-                else {
+                } else {
                     $_pl_entries | New-IPv6Subnet | Sort-Object
                 }
 
@@ -299,14 +322,18 @@ function Show-SecurityGroupRule
     #if ($_.ReferencedGroupInfo) { '_' }
 
     # Generate output after sorting and exclusion.
-    $_output = $_sgr_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = $_sgr_list `
+        | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list | Where-Object $_where
 
-    # Print out the output.
-    if ($global:EnableHtmlOutput) {
-        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
-    }
-    else {
-        $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    # Print out the output. If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {
+        $_output
+    } else {
+        if ($global:EnableHtmlOutput) {
+            $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        } else {
+            $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+        }
     }
 }
 

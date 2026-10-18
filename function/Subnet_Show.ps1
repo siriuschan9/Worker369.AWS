@@ -6,12 +6,7 @@ function Show-Subnet
 {
     [Alias('subnet_show')]
     [CmdletBinding(DefaultParameterSetName = 'None')]
-    param(
-        [parameter(Position = 0)]
-        [ValidateSet('Default', 'Attributes', 'NetworkAcl', 'RouteTable')]
-        [string]
-        $View = 'Default',
-
+    param (
         [Parameter(ParameterSetName = 'VpcId')]
         [ValidatePattern('^vpc-[0-9a-f]{17}$')]
         [string[]]
@@ -21,40 +16,48 @@ function Show-Subnet
         [string[]]
         $VpcName,
 
-        [Parameter()]
-        [Filter[]]
+        [Amazon.EC2.Model.Filter[]]
         $Filter,
+
+        [parameter(Position = 0)]
+        [ValidateSet('Default', 'Attributes', 'NetworkAcl', 'RouteTable')]
+        [string]
+        $View = 'Default',
 
         [Parameter()]
         [ValidateSet('Vpc', 'AvailabilityZone', 'SubnetType', 'NetworkStack', 'RouteTable', 'NetworkAcl', $null)]
         [string]
         $GroupBy = 'Vpc',
 
-        [Parameter()]
         [Int[]]
         $Sort,
 
-        [Parameter()]
         [Int[]]
         $Exclude,
 
-        [Parameter()]
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
-        [Parameter()]
         [switch]
         $NoRowSeparator
     )
 
     # Use snake_case.
-    $_view             = $View
+    $_filter           = $Filter
     $_vpc_id           = $VpcId
     $_vpc_name         = $VpcName
+    $_view             = $View
+    $_group_by         = $GroupBy
     $_exclude          = $Exclude
     $_sort             = $Sort
-    $_group_by         = $GroupBy
-    $_filter           = $Filter
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -98,10 +101,11 @@ function Show-Subnet
         }
         NetworkStack = {
             $_has_ipv4_cidr = $null -ne $_.CidrBlock
-            $_has_ipv6_cidr = $null -ne $_.Ipv6CidrBlockAssociationSet -and
-                ($_.Ipv6CidrBlockAssociationSet | Where-Object {
-                    $_.Ipv6CidrBlockState.State[0] -eq 'associated'
-                }).Count -gt 0
+            $_has_ipv6_cidr = `
+                $null -ne $_.Ipv6CidrBlockAssociationSet -and
+                (
+                    $_.Ipv6CidrBlockAssociationSet | Where-Object {$_.Ipv6CidrBlockState.State[0] -eq 'associated'}
+                ).Count -gt 0
 
             if     (     $_has_ipv4_cidr -and      $_has_ipv6_cidr) { 'dual-stack' }
             elseif (     $_has_ipv4_cidr -and -not $_has_ipv6_cidr) { 'ipv4-only'  }
@@ -109,13 +113,11 @@ function Show-Subnet
         }
         NetworkAcl = {
             $_acl_id = $_acl_id_lookup_by_subnet_id[$_.SubnetId]
-
             $_acl_dict[$_acl_id] | Get-ResourceString `
                 -IdPropertyName 'NetworkAclId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
         RouteTable = {
             $_rt_id = $_rt_id_lookup_by_subnet_id[$_.SubnetId]
-
             $_rt_dict[$_rt_id] | Get-ResourceString `
                 -IdPropertyName 'RouteTableId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
@@ -130,7 +132,6 @@ function Show-Subnet
         }
         SubnetType = {
             $_rt_id = $_rt_id_lookup_by_subnet_id[$_.SubnetId]
-
             $_public_route_table_id_list -contains $_rt_id ? 'public' : 'private'
         }
         Vpc = {
@@ -380,13 +381,17 @@ function Show-Subnet
         -Exclude          $_exclude
 
     # Generate output after sorting and exclusion.
-    $_output = $_subnet_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = $_subnet_list `
+        | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list | Where-Object $_where
 
-    # Print out the output.
-    if ($global:EnableHtmlOutput) {
-        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
-    }
-    else {
-        $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    # Print out the output. If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {
+        $_output
+    } else {
+        if ($global:EnableHtmlOutput) {
+            $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        } else {
+            $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+        }
     }
 }
