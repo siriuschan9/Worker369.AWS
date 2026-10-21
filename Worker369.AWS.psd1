@@ -130,6 +130,7 @@ FunctionsToExport = @(
     'Start-Ec2',                        # ec2_start
     'Stop-Ec2',                         # ec2_stop
     'Get-Ec2SystemLog',                 # ec2_console
+    'Disable-EbsDeleteOnTermination',   # ebs_dot_dis
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # ENI

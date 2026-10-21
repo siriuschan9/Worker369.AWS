@@ -45,6 +45,7 @@ Export-ModuleMember -Alias @(
     'ec2_start',                        # Start-Ec2
     'ec2_stop',                         # Stop-Ec2
     'ec2_console',                      # Get-Ec2SystemLog
+    'ebs_dot_dis',                      # Disable-EbsDeleteOnTermination
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # ENI

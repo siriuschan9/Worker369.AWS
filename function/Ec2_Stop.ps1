@@ -55,13 +55,13 @@ function Stop-Ec2
     PROCESS
     {
         # Use snake_case.
-        $_igw_name   = $InstanceName
-        $_igw_id     = $InstanceId
+        $_ec2_name   = $InstanceName
+        $_ec2_id     = $InstanceId
         $_force_stop = $ForceStop.IsPresent
 
         # Configure the filter to query the EC2 Instance.
         $_filter_name  = $_param_set -eq 'InstanceId' ? 'instance-id' : 'tag:Name'
-        $_filter_value = $_param_set -eq 'InstanceId' ? $_igw_id : $_igw_name
+        $_filter_value = $_param_set -eq 'InstanceId' ? $_ec2_id : $_ec2_name
 
         # Query the list of EC2 Instances to remove first.
         try {
@@ -84,7 +84,7 @@ function Stop-Ec2
         # If no EC2 Instance matched the filter value, exit early.
         if (-not $_ec2_list)
         {
-            Write-Error "No IGW was found for '$_filter_value'."
+            Write-Error "No ec2 was found for '$_filter_value'."
             return
         }
 
