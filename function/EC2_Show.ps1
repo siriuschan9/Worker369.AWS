@@ -47,8 +47,8 @@ function Show-Ec2
             'CurrentInstanceBootMode', 'Device', 'EbsStatus', 'Eni', 'EniPrivateIp', 'EniPublicIp', 'EniIpv6Address',
             'EniSubnet', 'ImageId', 'ImageName', 'InstanceId', 'InstanceProfile', 'InstanceStatus', 'InstanceType',
             'Ipv6Address', 'KeyName', 'Memory', 'Name', 'NetworkPerformance', 'PlatformDetails', 'PrivateIpAddress',
-            'PublicIpAddress', 'RootDeviceName', 'SecurityGroups', 'State', 'SystemStatus', 'TotalStorage', 'Volume',
-            'VolumeDelOnTerm', 'VolumeEncryptionKey', 'VolumeSize', 'Vpc'
+            'PublicIpAddress', 'RootDeviceName', 'SecurityGroups', 'State', 'SystemStatus', 'TerminationProtection',
+            'TotalStorage', 'Volume', 'VolumeDelOnTerm', 'VolumeEncryptionKey', 'VolumeSize', 'Vpc'
         )]
         [string[]]
         $CustomView,
@@ -112,7 +112,7 @@ function Show-Ec2
             'InstanceId', 'Name', 'State', 'SystemStatus', 'InstanceStatus', 'EbsStatus', 'AlarmStatus'
         )
         Security = @(
-            'InstanceId', 'Name', 'KeyName', 'InstanceProfile', 'SecurityGroups'
+            'InstanceId', 'Name', 'KeyName', 'InstanceProfile', 'SecurityGroups', 'TerminationProtection'
         )
         Sizing = @(
             'InstanceId', 'Name', 'InstanceType', 'CpuCredits', 'VCpu', 'Memory', 'NetworkPerformance'
@@ -333,6 +333,11 @@ function Show-Ec2
             $_root_volume |
             Get-ResourceString -IdPropertyName 'VolumeId' -TagPropertyName 'Tags' -PlainText:$_plain_text
         }
+        TerminationProtection = {
+            $_enabled = $_term_protection_lookup[$_.InstanceId]
+            $_desc    = $_enabled ? 'Enabled': 'Disabled'
+            New-Checkbox -PlainText:$_plain_text -Description $_desc $_enabled
+        }
         TotalStorage = {
             $_total = 0
             $_.BlockDeviceMappings.Ebs.ForEach({
@@ -384,15 +389,16 @@ function Show-Ec2
     }
 
     # Declare hashtables
-    $_alarm_lookup  = @{} # Hashtable to lookup cloudwatch alarm by Instance ID
-    $_credit_lookup = @{} # Hashtable to lookup instance credit specification
-    $_ebs_lookup    = @{} # Hashtable to lookup EBS volume by Volume ID
-    $_eni_lookup    = @{} # Hashtable to lookup ENI info by Network Interface ID
-    #$_eip_lookup    = @{} # Hashtable to lookup EIP by Private IP Address
-    $_status_lookup = @{} # Hashtable to lookup instance status by Instance ID
-    $_subnet_lookup = @{} # Hashtable to lookup subnet info by Subnet ID
-    $_type_lookup   = @{} # Hashtable to lookup instance type info by Instance Type
-    $_vpc_lookup    = @{} # Hashtable to lookup VPC info by VPC ID
+    $_alarm_lookup           = @{} # Hashtable to lookup cloudwatch alarm by Instance ID
+    $_credit_lookup          = @{} # Hashtable to lookup instance credit specification
+    $_ebs_lookup             = @{} # Hashtable to lookup EBS volume by Volume ID
+    $_term_protection_lookup = @{} # Hashtable to lookup Termination Protection
+    $_eni_lookup             = @{} # Hashtable to lookup ENI info by Network Interface ID
+    #$_eip_lookup             = @{} # Hashtable to lookup EIP by Private IP Address
+    $_status_lookup          = @{} # Hashtable to lookup instance status by Instance ID
+    $_subnet_lookup          = @{} # Hashtable to lookup subnet info by Subnet ID
+    $_type_lookup            = @{} # Hashtable to lookup instance type info by Instance Type
+    $_vpc_lookup             = @{} # Hashtable to lookup VPC info by VPC ID
 
     # Gibibyte
     $_gib = 1024 * 1024 * 1024
@@ -401,6 +407,9 @@ function Show-Ec2
         # Get all EC2
         Write-Message -Progress $_cmdlet_name 'Retrieving EC2 information.'
         $_ec2_list = Get-EC2Instance -Verbose:$false -Filter $_filter | Select-Object -ExpandProperty Instances
+
+        # If there are no EC2 instances, exit early
+        if (-not $_ec2_list) { return }
 
         $_instance_id_list   = $_ec2_list.InstanceId
         $_instance_type_list = $_ec2_list.InstanceType | Select-Object -Unique
@@ -483,6 +492,15 @@ function Show-Ec2
                 $_.Dimensions | Where-Object Name -eq 'InstanceId' | Select-Object -ExpandProperty Value
             }}
         }
+
+        if ($_view -in @('Security')) {
+            Write-Message -Progress $_cmdlet_name 'Retrieving instances termination protection setting.'
+            $_ec2_list | ForEach-Object {
+                $_term_protection_lookup[$_.InstanceId] = `
+                    Get-EC2InstanceAttribute -Verbose:$false -Attribute disableApiTermination $_.InstanceId |
+                    Select-Object -ExpandProperty DisableApiTermination
+            }
+        }
     }
     catch {
         # Remove caught exception emitted into $Error list.
@@ -509,8 +527,11 @@ function Show-Ec2
     if ($_pass_thru) {
         $_output
     } else {
-        $_align_left  = @('State', 'InstanceStatus', 'SystemStatus', 'EbsStatus', 'AlarmStatus', 'VolumeEncryptionKey')
-        $_align_right = @('VolumeSize', 'VolumeDelOnTerm')
+        $_align_left  = @(
+            'State', 'InstanceStatus', 'SystemStatus', 'EbsStatus', 'AlarmStatus', 'VolumeEncryptionKey',
+            'TerminationProtection')
+        $_align_right = @(
+            'VolumeSize', 'VolumeDelOnTerm')
         $_output | Format-Column `
             -AlignLeft $_align_left `
             -AlignRight $_align_right `

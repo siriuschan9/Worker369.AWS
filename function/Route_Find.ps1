@@ -280,36 +280,42 @@ function Find-Route
                 $_gateway_type = 'Internet Gateway'
                 $_gateway      = $_igw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'InternetGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'vpce-[0-9a-f]{17}'
             {
                 $_gateway_type = 'VPC Endpoint'
                 $_gateway      = $_vpce_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'VpcEndpointId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'nat-[0-9a-f]{17}'
             {
                 $_gateway_type = 'NAT Gateway'
                 $_gateway      = $_ngw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'NatGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'tgw-[0-9a-f]{17}'
             {
                 $_gateway_type = 'Transit Gateway'
                 $_gateway      = $_tgw_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'TransitGatewayId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'eni-[0-9a-f]{17}'
             {
                 $_gateway_type = 'Network Interface'
                 $_gateway      = $_eni_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'NetworkInterfaceId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             'pcx-[0-9a-f]{17}'
             {
                 $_gateway_type = 'VPC Peering Connection'
                 $_gateway      = $_pcx_lookup[$_target_id] | Get-ResourceString `
                     -IdPropertyName 'VpcPeeringConnectionId' -TagPropertyName 'Tags' -PlainText:$_plain_text
+                $_gateway      = $_gateway ?? $_target_id
             }
             default
             {
