@@ -150,22 +150,27 @@ function Show-KmsKey
         -Sort             $_sort `
         -Exclude          $_exclude
 
-    # Generate output after sorting and exclusion.
+    # Generate output.
     $_output = $_key_list `
         | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list `
         | Where-Object $_key_manager_filter | Where-Object $_where
 
-    # Print out the output. If -PassThru, put the objects in the pipeline.
-    if ($_pass_thru) {
-        $_output
-    } else {
-        $_align_left  = @('KeyState')
-        $_align_right = @()
-        $_output | Format-Column `
-            -AlignLeft $_align_left `
-            -AlignRight $_align_right `
-            -GroupBy $_group_by `
-            -PlainText:$_plain_text `
-            -NoRowSeparator:$_no_row_separator
+    # If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {$_output; return }
+
+    # If EnableHtmlOutput is set, output html markup.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        return
     }
+
+    # Print out the output to the terminal.
+    $_align_left  = @('KeyState')
+    $_align_right = @()
+    $_output | Format-Column `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -GroupBy $_group_by `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }

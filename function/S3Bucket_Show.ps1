@@ -55,6 +55,12 @@ function Show-S3Bucket
         [Int[]]
         $Exclude,
 
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -74,6 +80,8 @@ function Show-S3Bucket
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -248,22 +256,41 @@ function Show-S3Bucket
         -Sort             $_sort `
         -Exclude          $_exclude
 
-    # Generate output after sorting and exclusion.
-    $_output = $_bucket_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    # Generate output.
+    $_output = $_bucket_list `
+        | Select-Object $_select_list `
+        | Sort-Object   $_sort_list `
+        | Select-Object $_project_list `
+        | Where-Object  $_where
 
-    # Print out the output.
+    # If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {$_output; return }
+
+    # If EnableHtmlOutput is set, output html markup.
     if ($global:EnableHtmlOutput) {
         $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        return
     }
-    else {
-        $_output | Format-Column `
-            -GroupBy $_group_by `
-            -AlignLeft `
-                UseBucketKey, VersioningStatus, EnableMfaDelete, HasLifecycleRules, `
-                BlockPublicAcls, BlockPublicPolicy, IgnorePublicAcls, RestrictPublicBuckets, HasBucketPolicy `
-            -PlainText:$_plain_text `
-            -NoRowSeparator:$_no_row_separator
-    }
+
+    # Print out the output to the terminal.
+    $_align_left  = @(
+        'UseBucketKey',
+        'VersioningStatus',
+        'EnableMfaDelete',
+        'HasLifecycleRules',
+        'BlockPublicAcls',
+        'BlockPublicPolicy',
+        'IgnorePublicAcls',
+        'RestrictPublicBuckets',
+        'HasBucketPolicy'
+    )
+    $_align_right = @()
+    $_output | Format-Column `
+        -GroupBy $_group_by `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
 
 function Write-BucketRegion

@@ -35,6 +35,12 @@ function Show-RouteTable
         [Int[]]
         $Exclude,
 
+        [ScriptBlock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -50,6 +56,8 @@ function Show-RouteTable
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -283,8 +291,15 @@ function Show-RouteTable
         -Sort             $_sort `
         -Exclude          $_exclude
 
-    # Generate output after sorting and exclusion.
-    $_output = $_rt_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    # Generate output.
+    $_output = $_rt_list `
+        | Select-Object $_select_list `
+        | Sort-Object   $_sort_list `
+        | Select-Object $_project_list `
+        | Where-Object  $_where
+
+    # If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {$_output; return }
 
     # Print out the output.
     if ($global:EnableHtmlOutput) {

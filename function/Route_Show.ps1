@@ -21,6 +21,9 @@ function Show-Route
         [string]
         $IPVersion = 'Both',
 
+        [switch]
+        $Simple,
+
         [ValidateSet('IPVersion', 'Gateway', 'GatewayType', $null)]
         [string]
         $GroupBy = 'IPVersion',
@@ -31,8 +34,11 @@ function Show-Route
         [Int[]]
         $Exclude,
 
+        [ScriptBlock]
+        $Where = {$true},
+
         [switch]
-        $Simple,
+        $PassThru,
 
         [switch]
         $PlainText,
@@ -51,6 +57,8 @@ function Show-Route
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_simple           = $Simple.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
@@ -480,21 +488,31 @@ function Show-Route
         default { $_ip_version_filter = { $true } }
     }
 
-    # Generate output after sorting and exclusion.
+    # Generate output.
     $_output = $_custom_route_list `
-        | Where-Object $_ip_version_filter `
+        | Where-Object  $_ip_version_filter `
         | Select-Object $_select_list `
-        | Sort-Object $_sort_list `
-        | Select-Object $_project_list
+        | Sort-Object   $_sort_list `
+        | Select-Object $_project_list `
+        | Where-Object  $_where
 
-    # Print out the output.
+    # If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {$_output; return }
+
+    # If EnableHtmlOutput is set, output html markup.
     if ($global:EnableHtmlOutput) {
         $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        return
     }
-    else {
-        $_output | Format-Column `
-            -GroupBy $_group_by -AlignLeft 'Status', 'Propagated' `
-            -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
-    }
+
+    # Print out the output to the terminal.
+    $_align_left  = @('Status', 'Propagated')
+    $_align_right = @()
+    $_output | Format-Column `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -GroupBy $_group_by `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
 # State: Active | Blackhole | Filtered

@@ -280,22 +280,25 @@ function Show-SsmFleet
     $_output = $_inventory `
         | Select-Object $_select_list `
         | Sort-Object $_sort_list `
+        | Where-Object $_where `
         | Select-Object $_project_list_extended
-        | Where-Object $_where
 
-    # Print out the output. If -PassThru, put the objects in the pipeline.
-    if ($_pass_thru) {
-        $_output
-    } else {
-        $_align_left  = @(
-            'PingStatus', 'InstanceStatus', 'AgentVersion', 'ComplianceStatus')
-        $_align_right = @(
-            'NonCompliantCount')
-        $_output | Format-Column `
-            -AlignLeft $_align_left `
-            -AlignRight $_align_right `
-            -GroupBy $_group_by `
-            -PlainText:$_plain_text `
-            -NoRowSeparator:$_no_row_separator
+    # If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {$_output; return }
+
+    # If EnableHtmlOutput is set, output html markup.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        return
     }
+
+    # Print out the output to the terminal.
+    $_align_left  = @('PingStatus', 'InstanceStatus', 'AgentVersion', 'ComplianceStatus')
+    $_align_right = @('NonCompliantCount')
+    $_output | Format-Column `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -GroupBy $_group_by `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
