@@ -28,6 +28,12 @@ function Show-VpcPeering
         [Int[]]
         $Exclude,
 
+        [scriptblock]
+        $Where = {$true},
+
+        [switch]
+        $PassThru,
+
         [switch]
         $PlainText,
 
@@ -41,6 +47,8 @@ function Show-VpcPeering
     $_group_by         = $GroupBy
     $_sort             = $Sort
     $_exclude          = $Exclude
+    $_where            = $Where
+    $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
@@ -481,15 +489,27 @@ function Show-VpcPeering
         -Exclude          $_exclude
 
     # Generate output after sorting and exclusion.
-    $_output = $_peering_list | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list
+    $_output = $_peering_list `
+        | Select-Object $_select_list `
+        | Sort-Object   $_sort_list `
+        | Select-Object $_project_list `
+        | Where-Object  $_where
 
-    # Print out the output.
+    if ($_pass_thru) {$_output; return }
+
+    # If EnableHtmlOutput is set, output html markup.
     if ($global:EnableHtmlOutput) {
         $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        return
     }
-    else {
-        $_output | Format-Column `
-            -GroupBy $_group_by -AlignLeft Status `
-            -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
-    }
+
+    # Print out the output to the terminal.
+    $_align_left  = @('Status')
+    $_align_right = @()
+    $_output | Format-Column `
+        -GroupBy $_group_by `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
