@@ -36,7 +36,7 @@ function Show-Ec2
     param (
         [Parameter(ParameterSetName = 'PredefinedView', Position = 0)]
         [ValidateSet(
-            'Default', 'Network', 'Platform', 'Security', 'Sizing', 'Status', 'StorageSummary', 'StorageDetail'
+            'Alarm', 'Default', 'Network', 'Platform', 'Security', 'Sizing', 'Status', 'StorageSummary', 'StorageDetail'
         )]
         [string]
         $View = 'Default',
@@ -96,6 +96,9 @@ function Show-Ec2
 
     # Each view defines an array of property names.
     $_view_definition = @{
+        Alarm = (
+            'InstanceId', 'Name', 'State', 'AlarmName', 'AlarmStatus'
+        )
         Default = @(
             'InstanceId', 'Name', 'State', 'InstanceType', 'AvailabilityZone', 'PrivateIpAddress', 'PublicIpAddress',
             'Ipv6Address'
@@ -109,7 +112,7 @@ function Show-Ec2
             'ImageId', 'ImageName'
         )
         Status = @(
-            'InstanceId', 'Name', 'State', 'SystemStatus', 'InstanceStatus', 'EbsStatus', 'AlarmStatus'
+            'InstanceId', 'Name', 'State', 'SystemStatus', 'InstanceStatus', 'EbsStatus', 'Alarms'
         )
         Security = @(
             'InstanceId', 'Name', 'KeyName', 'InstanceProfile', 'SecurityGroups', 'TerminationProtection'
@@ -127,9 +130,23 @@ function Show-Ec2
 
     # Hashtable for Select-Object.
     $_select_definition = @{
-        AlarmStatus = {
+        Alarms = {
             $_alarm_summary = _get_alarm_summary($_alarm_lookup[$_.InstanceId])
             New-Checkbox -PlainText:$_plain_text -Description $_alarm_summary ($_alarm_summary -match '\d{1,} alarm ok')
+        }
+        AlarmName = {
+            $_alarm_lookup[$_.InstanceId] | Sort-Object AlarmName | Select-Object -ExpandProperty AlarmName
+        }
+        AlarmStatus = {
+            $_alarm_lookup[$_.InstanceId] | Sort-Object AlarmName | ForEach-Object {
+                $_checked = switch($_.StateValue)
+                {
+                    'OK'                { $true  }
+                    'INSUFFICIENT_DATA' { $null  }
+                    'ALARM'             { $false }
+                }
+                New-Checkbox -PlainText:$_plain_text -Description $_.StateValue $_checked
+            }
         }
         Architecture = {
             $_.Architecture
@@ -476,7 +493,7 @@ function Show-Ec2
                 Group-Object -AsHashTable VolumeId
         }
 
-        if ($_view -eq @('Status') -or $_status_attributes.Overlaps($_custom_view)) {
+        if ($_view -in @('Status', 'Alarm') -or $_status_attributes.Overlaps($_custom_view)) {
             # Get all alarms
             Write-Message -Progress $_cmdlet_name 'Retrieving alarm information.'
             # $_metric_name_list = `

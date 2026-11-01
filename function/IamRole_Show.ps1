@@ -4,13 +4,13 @@ function Show-IamRole
     [CmdletBinding()]
     param (
         [Parameter(Position = 0)]
-        [ValidateSet('General', 'Usage', 'Identifier')]
+        [ValidateSet('General', 'Usage', 'Identifier', 'Permission')]
         [string]
         $View = 'General',
 
         [ValidateSet('Path', $null)]
         [string]
-        $GroupBy = 'Path',
+        $GroupBy,
 
         [Int[]]
         $Sort,
@@ -40,6 +40,10 @@ function Show-IamRole
     $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
+
+    $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
+
+    $_dash = $_plain_text ? "-" : "$($PSStyle.Dim)-$($PSStyle.Reset)"
 
     $_select_definition = @{
         Path = {
@@ -82,13 +86,17 @@ function Show-IamRole
             $_.MaxSessionDuration
         }
         LastUsedDate = {
-            $_.RoleLastUsed.LastUsedDate
+            $_supplement_info = $_supplement_lookup[$_.RoleId]
+            $_supplement_info.RoleLastUsed.LastUsedDate ?? $_dash
         }
         LastUsedRegion = {
-            $_.RoleLastUsed.Region
+            $_supplement_info = $_supplement_lookup[$_.RoleId]
+            $_supplement_info.RoleLastUsed.Region ?? $_dash
         }
         LastUsedSince = {
-            if ($_last_used_date = $_.RoleLastUsed.LastUsedDate) {
+            $_supplement_info = $_supplement_lookup[$_.RoleId]
+            $_last_used_date  = $_supplement_info.RoleLastUsed.LastUsedDate
+            if ($_last_used_date) {
                 $_timespan = $_now - $_last_used_date
                 $_timespan.Days -eq 1 `
                     ? "$($_timespan.Days) day ago"
@@ -104,41 +112,55 @@ function Show-IamRole
                                         ? "$($_timespan.Minutes) minutes ago"
                                         : 'Just now'
             }
+            else { $_dash }
         }
-        PermissionBoundary = {
-            $_.PermissionBoundary
+        PermissionsBoundary = {
+            $_supplement_info      = $_supplement_lookup[$_.RoleId]
+            $_permissions_boundary = $_supplement_info.PermissionsBoundary
+            $_permissions_boundary ? ($_permissions_boundary.PermissionsBoundaryArn -split '/')[-1] :$_dash
+        }
+        Policies = {
+            $_supplement_info = $_supplement_lookup[$_.RoleId]
+
+            $_attached_policy_list = $_supplement_info.AttachedManagedPolicies `
+                | Where-Object { $null -ne $_ } `
+                | ForEach-Object {
+                    $_.PolicyArn -like 'arn:aws:iam::aws:policy/*' `
+                        ? "[A] $($_.PolicyName)" `
+                        : "[C] $($_.PolicyName)"
+                }
+            $_inline_policy_list = $_supplement_info.RolePolicyList `
+                | Where-Object   { $null -ne $_ } `
+                | ForEach-Object {"[I] $($_.PolicyName)" }
+
+            @($_attached_policy_list) + @($_inline_policy_list) | Sort-Object
         }
     }
 
     $_view_definition = @{
         'General' = @(
-            'Path', 'RoleName', 'CreateDate', 'Description'
+            'RoleName', 'CreateDate', 'Description'
         )
         'Identifier' = @(
             'RoleId', 'RoleArn'
         )
+        'Permission' = @(
+            'RoleName', 'Policies', 'PermissionsBoundary'
+        )
         'Usage' = @(
-            'Path', 'RoleName', 'MaxSessionDuration', 'LastUsedSince', 'LastUsedDate', 'LastUsedRegion'
+            'RoleName', 'MaxSessionDuration', 'LastUsedSince', 'LastUsedDate', 'LastUsedRegion'
         )
     }
 
     try {
+        Write-Message -Progress $_cmdlet_name 'Fetching IAM role data.'
         $_role_list = Get-IAMRoleList -Verbose:$false
 
-        if ($_view -eq 'Usage') {
-            $_num_roles = $_role_list.Length
-            $_complete  = 0
-            foreach ($_role in $_role_list) {
-                $_role.RoleLastUsed = (Get-IAMRole -Verbose:$false -Select Role.RoleLastUsed $_role.RoleName)
-
-                $_complete++
-                $_percent_complete = ($_complete / $_num_roles) * 100
-                Write-Progress `
-                    -PercentComplete $_percent_complete `
-                    -Activity 'Collecting Role Last Used Info' `
-                    -Status "Current Role: $($_role.RoleName)"
-            }
-        }
+        Write-Message -Progress $_cmdlet_name 'Fetching supplement data.'
+        $_supplement_lookup =
+            Get-IAMAccountAuthorizationDetail -Verbose:$false -Filter 'Role' |
+            Select-Object -ExpandProperty RoleDetailList |
+            Group-Object -AsHashTable RoleId
     }
     catch {
         # Remove caught exception emitted into $Error list.
@@ -152,7 +174,7 @@ function Show-IamRole
     if (-not $_role_list) { return }
 
     # Apply default sort order.
-    if ($_group_by -eq 'Path' -and
+    if ($_null -eq $_group_by -and
         $_view -eq 'General' -and
         -not $PSBoundParameters.Keys.Contains('Exclude') -and
         -not $PSBoundParameters.Keys.Contains('Sort')
@@ -176,17 +198,22 @@ function Show-IamRole
     $_output = $_role_list `
         | Select-Object $_select_list | Sort-Object $_sort_list | Select-Object $_project_list | Where-Object $_where
 
-    # Print out the output. If -PassThru, put the objects in the pipeline.
-    if ($_pass_thru) {
-        $_output
-    } else {
-        $_align_left  = @()
-        $_align_right = @('LastUsedSince')
-        $_output | Format-Column `
-            -AlignLeft $_align_left `
-            -AlignRight $_align_right `
-            -GroupBy $_group_by `
-            -PlainText:$_plain_text `
-            -NoRowSeparator:$_no_row_separator
+    # If -PassThru, put the objects in the pipeline.
+    if ($_pass_thru) {$_output; return }
+
+    # If EnableHtmlOutput is set, output html markup.
+    if ($global:EnableHtmlOutput) {
+        $_output | Format-Html -GroupBy $_group_by | Remove-PSStyle
+        return
     }
+
+    # Print out the output to the terminal.
+    $_align_left  = @()
+    $_align_right = @('LastUsedSince', 'LastUsedDate', 'LastUsedRegion')
+    $_output | Format-Column `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -GroupBy $_group_by `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
