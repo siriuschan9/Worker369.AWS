@@ -1,6 +1,7 @@
 function ForEach-AwsAccount
 {
     [CmdletBinding()]
+    [Alias('aws_foreach')]
     param (
         [Parameter(ValueFromPipeline, ValueFromPipelineByPropertyName, Position = 0)]
         [string[]]

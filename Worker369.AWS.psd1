@@ -99,6 +99,7 @@ FunctionsToExport = @(
     'Get-HintItem',                                                         # Consider to remove if released.
     'Get-QueryDefinition',                                                  # Consider to remove if released.
     'Get-ResourceString',                                                   # Consider to remove if released.
+    'ForEach-AwsAccount',
     'New-TagSpecification',                                                 # Consider to remove if released.
 
     # ---------------------------------------------------------------------------------------------------------------- #

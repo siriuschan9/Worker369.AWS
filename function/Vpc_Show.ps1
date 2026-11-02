@@ -430,9 +430,9 @@ function Show-Vpc
 
     # Generate output after sorting and exclusion.
     $_output = $_vpc_list `
-        | Select-Object $_select_list ·
-        | Sort-Object   $_sort_list ·
-        | Select-Object $_project_list ·
+        | Select-Object $_select_list `
+        | Sort-Object   $_sort_list `
+        | Select-Object $_project_list `
         | Where-Object  $_where
 
     # If -PassThru, put the objects in the pipeline.
