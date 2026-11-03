@@ -45,6 +45,9 @@ function Show-TargetGroup
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
 
+    # For easy pick-up.
+    $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
+
     $_view_definition = @{
         'Health' = @(
             'TargetGroupName', 'LoadBalancers', 'TargetType', 'TargetPort', 'TargetProtocol',
@@ -69,16 +72,47 @@ function Show-TargetGroup
             $_.Protocol
         }
         Target = {
-
+            $_health_lookup[$_.TargetGroupArn] |
+            Select-Object -ExpandProperty Target |
+            Select-Object -ExpandProperty Id
         }
         AvailabilityZone = {
-
+            $_health_lookup[$_.TargetGroupArn] |
+            Select-Object -ExpandProperty Target |
+            Select-Object -ExpandProperty AvailabilityZone
         }
         State = {
-
+            $_health_lookup[$_.TargetGroupArn] |
+            Select-Object -ExpandProperty TargetHealth |
+            Select-Object -ExpandProperty State
         }
         Reason = {
-
+            $_health_lookup[$_.TargetGroupArn] |
+            Select-Object -ExpandProperty TargetHealth |
+            Select-Object -ExpandProperty Reason
         }
+    }
+
+    try {
+
+        Write-Message -Progress $_cmdlet_name 'Fetching Target Groups.'
+        $_tg_list = Get-ELB2TargetGroup -Verbose:$false
+
+        # Exit early if there are no target groups.
+        if (-not $_tg_list) { return }
+
+        if ($_view -in @('health')) {
+            $_health_lookup = @{}
+            $_tg_list | ForEach-Object {
+                $_health_lookup[$_.TargetGroupArn] = Get-ELB2TargetHealth -Verbose:$false $_.TargetGroupArn
+            }
+        }
+    }
+    catch {
+        # Remove caught exception emitted into $Error list.
+        Pop-ErrorRecord $_
+
+        # Re-throw caught exception.
+        $PSCmdlet.ThrowTerminatingError($_)
     }
 }
