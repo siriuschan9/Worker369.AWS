@@ -89,6 +89,12 @@ Export-ModuleMember -Alias @(
     'func_show',                        # Show-Lambda
 
     # ---------------------------------------------------------------------------------------------------------------- #
+    # Load Balancer
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'elb_show',                         # Show-Elb
+    'tg_show',                          # Show-ElbTargetGroup
+
+    # ---------------------------------------------------------------------------------------------------------------- #
     # KMS
     # ---------------------------------------------------------------------------------------------------------------- #
     'kms_show',                         # Show-Kms
@@ -161,6 +167,7 @@ Export-ModuleMember -Alias @(
     'sg_cp',                            # Copy-SecurityGroup
     'sg_rn',                            # Rename-SecurityGroup
     'sg_rm',                            # Remove-SecurityGroup
+    'sg_resolve',                       # Resolve-SecurityGroup
     'sg_default',                       # Set-DefaultSecurityGroup
     'sg_default?',                      # Get-DefaultSecurityGroup
     'sgr_show',                         # Show-SecuriryGroupRule

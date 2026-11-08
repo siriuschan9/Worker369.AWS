@@ -62,6 +62,7 @@ RequiredModules = @(
     'AWS.Tools.SecurityToken',
     'AWS.Tools.IdentityManagement',
     'AWS.Tools.EC2',
+    'AWS.Tools.ElasticLoadBalancingV2',
     'AWS.Tools.CloudFormation',
     'AWS.Tools.IdentityStore',
     'AWS.Tools.Lambda',
@@ -71,7 +72,8 @@ RequiredModules = @(
     'AWS.Tools.SimpleEmailV2',
     'AWS.Tools.SimpleSystemsManagement',
     'AWS.Tools.SecurityToken',
-    'AWS.Tools.SSOAdmin'
+    'AWS.Tools.SSOAdmin',
+    'AWS.Tools.WAFv2'
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -171,6 +173,12 @@ FunctionsToExport = @(
     'Show-Lambda',                      # func_show
 
     # ---------------------------------------------------------------------------------------------------------------- #
+    # Load Balancer
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show-Elb',                         # elb_show
+    'Show-ElbTargetGroup',              # tg_show
+
+    # ---------------------------------------------------------------------------------------------------------------- #
     # KMS
     # ---------------------------------------------------------------------------------------------------------------- #
     'Show-KmsKey',                      # kms_show
@@ -243,6 +251,7 @@ FunctionsToExport = @(
     'Clear-SecurityGroup',              # sg_clear                      # Remove all rules in a security group
     'Rename-SecurityGroup',             # sg_rn
     'Remove-SecurityGroup',             # sg_rm
+    'Resolve-SecurityGroup',            # sg_resolve
     'Get-DefaultSecurityGroup',         # sg_default?                   # What is the shell's current security group
     'Set-DefaultSecurityGroup',         # sg_default                    # Sets the shell's current security group
     'Show-SecurityGroupRule',           # sgr_show

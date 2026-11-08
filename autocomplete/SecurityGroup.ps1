@@ -1,16 +1,16 @@
 $_cmd_lookup = @{
 
     GroupId = @(
-        'Rename-SecurityGroup', 'Remove-SecurityGroup', 'Clear-SecurityGroup',
+        'Rename-SecurityGroup', 'Remove-SecurityGroup', 'Clear-SecurityGroup', 'Resolve-SecurityGroup',
         'Set-DefaultSecurityGroup',
         'Show-SecurityGroupRule'
 
     )
     GroupName = @(
-        'Show-SecurityGroupRule'
+        'Show-SecurityGroupRule', 'Resolve-SecurityGroup'
     )
     TagName = @(
-        'Rename-SecurityGroup', 'Remove-SecurityGroup', 'Clear-SecurityGroup',
+        'Rename-SecurityGroup', 'Remove-SecurityGroup', 'Clear-SecurityGroup', 'Resolve-SecurityGroup',
         'Set-DefaultSecurityGroup',
         'Show-SecurityGroupRule'
     )

@@ -152,7 +152,7 @@ function Show-Ec2
             $_.Architecture
         }
         AvailabilityZone = {
-            $_subnet_lookup[$_.SubnetId].AvailabilityZone
+            $_.Placement.AvailabilityZone
         }
         AttachedVolumes = {
             $_.BlockDeviceMappings.Count
