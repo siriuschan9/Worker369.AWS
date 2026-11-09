@@ -86,7 +86,7 @@ function Show-SecurityGroupRule
             Write-Error (
                 'Default Security Group has not been set. ' +
                 'You can only use this cmdlet with no parameters when ' +
-                'Default Security Group can be set using the ''Set-DefaultSecurityGroup'' cmdlet.'
+                'Default Security Group have be set using the ''Set-DefaultSecurityGroup'' cmdlet.'
             )
             return
         }
@@ -129,7 +129,7 @@ function Show-SecurityGroupRule
     # If no Security Groups matched the filter value, exit early.
     if (-not $_sg_list)
     {
-        Write-Error "No Security Groups were found for '$_filter_value'."
+        Write-Error "No Security Group was found for '$_filter_value'."
         return
     }
 
@@ -209,14 +209,14 @@ function Show-SecurityGroupRule
         FromPort = {
             [FromPort]::new($_.FromPort, $_.IpProtocol -in @('icmp', 'icmpv6'))
         }
+        IpProtocol = {
+            [IPProtocol]::FromString($_.IpProtocol)
+        }
         IpVersion = {
             if ($_.CidrIpv4) { 'IPv4' }
             if ($_.CidrIpv6) { 'IPv6' }
             if ($_.PrefixListId) { $_pl_lookup[$_.PrefixListId].AddressFamily }
             if ($_.ReferencedGroupInfo) { '_' }
-        }
-        IpProtocol = {
-            [IPProtocol]::FromString($_.IpProtocol)
         }
         RemoteAddress = {
             if ($_.CidrIpv4) {
@@ -338,7 +338,14 @@ function Show-SecurityGroupRule
     }
 
     # Print out the output to the terminal.
-    $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    $_align_left  = @()
+    $_align_right = @('FromPort', 'ToPort')
+    $_output | Format-Column `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -GroupBy $_group_by `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
 
 <#>

@@ -1,12 +1,16 @@
 $_cmd_lookup = @{
     NetworkAclId = @(
         'Remove-NetworkAcl',
-        'Rename-NetworkAcl'
+        'Rename-NetworkAcl',
+        'Show-NetworkAclRule',
+        'Set-DefaultNetworkAcl'
 
     )
     NetworkAclName = @(
         'Remove-NetworkAcl',
-        'Rename-NetworkAcl'
+        'Rename-NetworkAcl',
+        'Show-NetworkAclRule',
+        'Set-DefaultNetworkAcl'
     )
 }
 

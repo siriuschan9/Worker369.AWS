@@ -117,6 +117,10 @@ Export-ModuleMember -Alias @(
     'nacl_add',                         # New-NetworkAcl
     'nacl_rn',                          # Rename-NetworkAcl
     'nacl_rm',                          # Remove-NetworkAcl
+    'nacl_default',                     # Set-DefaultNetworkAcl
+    'nacl_default?',                    # Get-DefaultNetworkAcl
+    'nacl_default_clear',               # Clear-DefaultNetworkAcl
+    'naclr_show',                       # Show-NetworkAclRule
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Route 53
@@ -255,6 +259,9 @@ Export-ModuleMember -Variable 'ResourceStringPreference'
 
 # Default Route Table To Work On When Using route_show
 Export-ModuleMember -Variable 'DefaultRouteTable'
+
+# Default Network ACL To Work On When Using naclr_show
+Export-ModuleMember -Variable 'DefaultNetworkAcl'
 
 # On/Off HTML Output
 [bool]$EnableHtmlOutput = $false

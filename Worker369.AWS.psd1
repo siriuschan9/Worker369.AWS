@@ -201,6 +201,9 @@ FunctionsToExport = @(
     'New-NetworkAcl',                   # nacl_add
     'Rename-NetworkAcl',                # nacl_rn
     'Remove-NetworkAcl',                # nacl_rm
+    'Set-DefaultNetworkAcl',            # nacl_default
+    'Get-DefaultNetworkAcl',            # nacl_default?
+    'Show-NetworkAclRule',              # naclr_show
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Route 53

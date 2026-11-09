@@ -23,9 +23,9 @@ public readonly struct IpProtocol : IComparable, IComparable<IpProtocol>
     public override string ToString()
     {
         if (string.IsNullOrEmpty(Keyword))
-            return $"{Number}";
+            return $"{Number, 4}";
         else
-            return $"{Number} ({Keyword})";
+            return $"{Number, 4} ({Keyword})";
     }
 
     public static IpProtocol FromNumber(int number)
