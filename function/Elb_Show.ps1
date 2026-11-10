@@ -135,9 +135,13 @@ function Show-Elb
             Get-ResourceString -IdPropertyName VpcId -TagPropertyName Tags -PlainText:$_plain_text
         }
         WAF = {
-            $_waf = $_waf_lookup[$_.LoadBalancerArn] | Select-Object -ExpandProperty Name
-            $_waf = $_waf ?? 'No WAF Attached'
-            New-Checkbox -PlainText:$_plain_text -Description $_waf ($_waf -ne 'No WAF Attached')
+            if ($_.Type -eq 'application') {
+                $_waf = $_waf_lookup[$_.LoadBalancerArn] | Select-Object -ExpandProperty Name
+                $_waf = $_waf ?? 'No WAF Attached'
+                New-Checkbox -PlainText:$_plain_text -Description $_waf ($_waf -ne 'No WAF Attached')
+            } else {
+                New-Checkbox -PlainText:$_plain_text -Description 'Not Applicable' $false
+            }
         }
     }
 
@@ -145,7 +149,7 @@ function Show-Elb
         # Fetch ELB information.
         Write-Message -Progress $_cmdlet_name 'Fetching ELB information.'
         $_elb_list = Get-ELB2LoadBalancer -Verbose:$false | ForEach-Object {
-            $_part1 = $_.Type -eq 'application' ? 'ELB app' : $_.Type -eq 'network' ? 'net' : 'gwy'
+            $_part1 = $_.Type -eq 'application' ? 'ELB app' : $_.Type -eq 'network' ? 'ELB net' : 'ELB gwy'
             $_part2 = $_.LoadBalancerName
             $_part3 = $_.LoadBalancerArn -split '/' | Select-Object -Last 1
             $_ | Add-Member EniDescription "$($_part1)/$($_part2)/$($_part3)"
@@ -187,7 +191,7 @@ function Show-Elb
             # Fetch WAF.
             Write-Message -Progress $_cmdlet_name 'Fetching WAF attachments.'
             $_waf_lookup = @{}
-            $_elb_list | ForEach-Object {
+            $_elb_list | Where-Object Type -eq 'application' | ForEach-Object {
                 $_waf_lookup[$_.LoadBalancerArn] = `
                     Get-WAF2WebACLForResource -Verbose:$false $_.LoadBalancerArn
             }

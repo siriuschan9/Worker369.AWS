@@ -201,8 +201,9 @@ FunctionsToExport = @(
     'New-NetworkAcl',                   # nacl_add
     'Rename-NetworkAcl',                # nacl_rn
     'Remove-NetworkAcl',                # nacl_rm
-    'Set-DefaultNetworkAcl',            # nacl_default
-    'Get-DefaultNetworkAcl',            # nacl_default?
+    'Set-DefaultNetworkAcl',            # nacl_default                  # What is the shell's current nacl
+    'Get-DefaultNetworkAcl',            # nacl_default?                 # Sets the shell's current nacl
+    'Clear-DefaultNewtworkAcl',         # nacl_default_clear            # Clears the shell's current nacl
     'Show-NetworkAclRule',              # naclr_show
 
     # ---------------------------------------------------------------------------------------------------------------- #

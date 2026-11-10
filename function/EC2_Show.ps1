@@ -556,6 +556,7 @@ function Show-Ec2
         'SystemStatus',
         'EbsStatus',
         'AlarmStatus',
+        'Alarms',
         'VolumeEncryptionKey',
         'TerminationProtection'
     )
