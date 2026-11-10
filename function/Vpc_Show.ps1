@@ -91,8 +91,8 @@ function Show-Vpc
             $_.BlockPublicAccessStates.InternetGatewayBlockMode
         }
         CloudWatchLogs = {
-            $_has_flow_logs_in_cloudwatch = $_flow_logs_lookup.ContainsKey("$($_.VpcId), cloud-watch-logs")
-            New-Checkbox -PlainText:$_plain_text $_has_flow_logs_in_cloudwatch
+            $_log_destination = $_flow_logs_lookup["$($_.VpcId), cloud-watch-logs"].LogGroupName
+            New-Checkbox -PlainText:$_plain_text -Description $_log_destination ($null -ne $_log_destination)
         }
         DefaultNetworkAcl = {
             $_network_acl_lookup[$_.VpcId] | Where-Object IsDefault |
@@ -157,8 +157,8 @@ function Show-Vpc
             New-Checkbox -PlainText:$_plain_text $_.IsDefault
         }
         KinesisDataFirehose = {
-            $_has_flow_logs_in_firehose = $_flow_logs_lookup.ContainsKey("$($_.VpcId), kinesis-data-firehose")
-            New-Checkbox -PlainText:$_plain_text $_has_flow_logs_in_firehose
+            $_log_destination = $_flow_logs_lookup["$($_.VpcId), kinesis-data-firehose"].LogDestination
+            New-Checkbox -PlainText:$_plain_text -Description $_log_destination ($null -ne $_log_destination)
         }
         MainRouteTable = {
             $_route_table_lookup[$_.VpcId] `
@@ -195,8 +195,8 @@ function Show-Vpc
             New-NumberInfo -FormatSettings $_num_settings $_num_rt
         }
         S3 = {
-            $_has_flow_logs_in_s3 = $_flow_logs_lookup.ContainsKey("$($_.VpcId), s3")
-            New-Checkbox -PlainText:$_plain_text $_has_flow_logs_in_s3
+            $_log_destination = $_flow_logs_lookup["$($_.VpcId), s3"].LogDestination
+            New-Checkbox -PlainText:$_plain_text -Description $_log_destination ($null -ne $_log_destination)
         }
         SecurityGroups = {
             $_num_sg       = $_sg_lookup[$_.VpcId].Count - 1
@@ -445,5 +445,12 @@ function Show-Vpc
     }
 
     # Print out the output to the terminal.
-    $_output | Format-Column -GroupBy $_group_by -PlainText:$_plain_text -NoRowSeparator:$_no_row_separator
+    $_align_left  = @('CloudWatchLogs', 'KinesisDataFirehose', 'S3')
+    $_align_right = @()
+    $_output | Format-Column `
+        -GroupBy $_group_by `
+        -AlignLeft $_align_left `
+        -AlignRight $_align_right `
+        -PlainText:$_plain_text `
+        -NoRowSeparator:$_no_row_separator
 }
