@@ -58,6 +58,9 @@ function Show-Vpc
     $_plain_number_settings = [NumberInfoSettings]::Make()
     $_plain_number_settings.Format.Unscaled = '#,###;#,###;-'
 
+    # Display am dimmed dash for empty list.
+    $_dash = $_plain_text ? '-' : "$($PSStyle.Dim)-$($PSStyle.Reset)"
+
     # Each view defines an array of property names.
     $_view_definition = @{
         Default = @(
@@ -68,7 +71,7 @@ function Show-Vpc
             'VpcId', 'Name', 'Ipv4Cidr', 'Ipv6Cidr', 'InternetGateway', 'MainRouteTable', 'DefaultNetworkAcl'
         )
         Flowlogs = @(
-            'VpcId', 'Name', 'CloudWatchLogs', 'KinesisDataFirehose', 'S3'
+            'VpcId', 'Name', 'CloudWatchLogs', 'S3', 'KinesisDataFirehose'
         )
         DhcpOptions = @(
             'VpcId', 'Name', 'DhcpOptionSet', 'DomainName', 'DnsServer', 'NtpServer', 'Ipv6LeaseTime'
@@ -91,8 +94,7 @@ function Show-Vpc
             $_.BlockPublicAccessStates.InternetGatewayBlockMode
         }
         CloudWatchLogs = {
-            $_log_destination = $_flow_logs_lookup["$($_.VpcId), cloud-watch-logs"].LogGroupName
-            New-Checkbox -PlainText:$_plain_text -Description $_log_destination ($null -ne $_log_destination)
+            $_flow_logs_lookup["$($_.VpcId), cloud-watch-logs"].LogGroupName ?? $_dash
         }
         DefaultNetworkAcl = {
             $_network_acl_lookup[$_.VpcId] | Where-Object IsDefault |
@@ -157,8 +159,7 @@ function Show-Vpc
             New-Checkbox -PlainText:$_plain_text $_.IsDefault
         }
         KinesisDataFirehose = {
-            $_log_destination = $_flow_logs_lookup["$($_.VpcId), kinesis-data-firehose"].LogDestination
-            New-Checkbox -PlainText:$_plain_text -Description $_log_destination ($null -ne $_log_destination)
+            $_flow_logs_lookup["$($_.VpcId), kinesis-data-firehose"].LogDestination ?? $_dash
         }
         MainRouteTable = {
             $_route_table_lookup[$_.VpcId] `
@@ -195,8 +196,7 @@ function Show-Vpc
             New-NumberInfo -FormatSettings $_num_settings $_num_rt
         }
         S3 = {
-            $_log_destination = $_flow_logs_lookup["$($_.VpcId), s3"].LogDestination
-            New-Checkbox -PlainText:$_plain_text -Description $_log_destination ($null -ne $_log_destination)
+            $_flow_logs_lookup["$($_.VpcId), s3"].LogDestination ?? $_dash
         }
         SecurityGroups = {
             $_num_sg       = $_sg_lookup[$_.VpcId].Count - 1
@@ -366,8 +366,15 @@ function Show-Vpc
         if ($_view -in @('Flowlogs'))
         {
             Write-Message -Progress $_cmdlet_name "Fetching VPC Flow Logs."
-            $_flow_logs_lookup = Get-EC2FlowLogs -Verbose:$false `
-                | Group-Object -AsHashTable -AsString ResourceId, LogDestinationType
+            $_flow_logs_lookup = @{}
+            Get-EC2FlowLogs -Verbose:$false | ForEach-Object {
+                $_key = "$($_.ResourceId), $($_.LogDestinationType)"
+                if (-not $_flow_logs_lookup.ContainsKey($_key))
+                {
+                    $_flow_logs_lookup[$_key] = [System.Collections.Generic.List[Amazon.EC2.Model.FlowLog]]::new()
+                }
+                $_flow_logs_lookup[$_key].Add($_)
+            }
         }
 
         # Retrieve VPC Block Public Access.

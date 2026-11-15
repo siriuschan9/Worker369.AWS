@@ -55,25 +55,25 @@ PowerShellVersion = '7.2'
 # Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @(
     'Worker369.Utility',
+    'AWS.Tools.Account',
+    'AWS.Tools.CertificateManager',
     'AWS.Tools.Common',
     'AWS.Tools.CloudFormation',
     'AWS.Tools.CloudWatch',
     'AWS.Tools.CloudWatchLogs',
-    'AWS.Tools.SecurityToken',
-    'AWS.Tools.IdentityManagement',
     'AWS.Tools.EC2',
     'AWS.Tools.ElasticLoadBalancingV2',
-    'AWS.Tools.CloudFormation',
+    'AWS.Tools.IdentityManagement',
     'AWS.Tools.IdentityStore',
     'AWS.Tools.Lambda',
     'AWS.Tools.Organizations',
     'AWS.Tools.Route53',
     'AWS.Tools.S3',
+    'AWS.Tools.SecurityToken',
     'AWS.Tools.SimpleEmailV2',
     'AWS.Tools.SimpleSystemsManagement',
-    'AWS.Tools.SecurityToken',
     'AWS.Tools.SSOAdmin',
-    'AWS.Tools.WAFv2'
+    'AWS.Tools.WAFV2'
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -98,10 +98,11 @@ FunctionsToExport = @(
     # ---------------------------------------------------------------------------------------------------------------- #
     # Utilities
     # ---------------------------------------------------------------------------------------------------------------- #
+    'ForEach-AwsAccount',               # aws_foreach                       #
     'Get-HintItem',                                                         # Consider to remove if released.
     'Get-QueryDefinition',                                                  # Consider to remove if released.
     'Get-ResourceString',                                                   # Consider to remove if released.
-    'ForEach-AwsAccount',
+    'Invoke-AwsApi',                                                        # Handles rate limiting.
     'New-TagSpecification',                                                 # Consider to remove if released.
 
     # ---------------------------------------------------------------------------------------------------------------- #
@@ -135,6 +136,12 @@ FunctionsToExport = @(
     'Get-Ec2SystemLog',                 # ec2_console
     'Disable-EbsDeleteOnTermination',   # ebs_dot_dis
     'Enable-EbsDeleteOnTermination',    # ebs_dot_en
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Elastic Load Balancing
+    # ---------------------------------------------------------------------------------------------------------------- #
+    'Show=Elb',                         # elb_show
+    'Show-ElbTargetGroup',              # tg_show
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # ENI
