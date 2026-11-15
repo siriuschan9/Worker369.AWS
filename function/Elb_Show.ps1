@@ -88,10 +88,14 @@ function Show-Elb
             }
         }
         Listener = {
-            $_listener_lookup[$_.LoadBalancerArn] | ForEach-Object {
+            if ($_.Type -eq 'gateway') {
+                return $_dash
+            }
+            $_results = $_listener_lookup[$_.LoadBalancerArn] | ForEach-Object {
                 $_has_tls = $null -ne $_.SslPolicy
                 $_has_tls ? "$($_.Protocol):$($_.Port) - $($_.SslPolicy)" : "$($_.Protocol):$($_.Port)"
             }
+            $_results ?? $_dash
         }
         NetworkInterface = {
             $_eni_lookup[$_.EniDescription] |
@@ -119,13 +123,14 @@ function Show-Elb
             }
         }
         Scheme = {
-            $_.Scheme
+            $_.Scheme ?? $_dash
         }
         SecurityGroup = {
-            $_.SecurityGroups | ForEach-Object {
+            $_results = $_.SecurityGroups | Where-Object { $null -ne $_ } | ForEach-Object {
                 $_sg_lookup[$_] |
                 Get-ResourceString -IdPropertyName 'GroupId' -NamePropertyName 'GroupName' -PlainText:$_plain_text
             }
+            $_results ?? $_dash
         }
         Type = {
             $_.Type
@@ -135,13 +140,9 @@ function Show-Elb
             Get-ResourceString -IdPropertyName VpcId -TagPropertyName Tags -PlainText:$_plain_text
         }
         WAF = {
-            if ($_.Type -eq 'application') {
-                $_waf = $_waf_lookup[$_.LoadBalancerArn] | Select-Object -ExpandProperty Name
-                $_waf = $_waf ?? 'No WAF Attached'
-                New-Checkbox -PlainText:$_plain_text -Description $_waf ($_waf -ne 'No WAF Attached')
-            } else {
-                New-Checkbox -PlainText:$_plain_text -Description 'Not Applicable' $false
-            }
+            $_waf = $_waf_lookup[$_.LoadBalancerArn] | Select-Object -ExpandProperty Name
+            $_waf = $_waf ?? 'No WAF Attached'
+            New-Checkbox -PlainText:$_plain_text -Description $_waf ($_waf -ne 'No WAF Attached')
         }
     }
 
@@ -192,8 +193,10 @@ function Show-Elb
             Write-Message -Progress $_cmdlet_name 'Fetching WAF attachments.'
             $_waf_lookup = @{}
             $_elb_list | Where-Object Type -eq 'application' | ForEach-Object {
-                $_waf_lookup[$_.LoadBalancerArn] = `
-                    Get-WAF2WebACLForResource -Verbose:$false $_.LoadBalancerArn
+                $_elb = $_
+                $_waf_lookup[$_.LoadBalancerArn] = Invoke-AwsApi {
+                    Get-WAF2WebACLForResource -Verbose:$false $_elb.LoadBalancerArn
+                }  
             }
             # Fetch security groups.
             Write-Message -Progress $_cmdlet_name 'Fetching security groups.'
