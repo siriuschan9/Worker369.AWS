@@ -98,6 +98,9 @@ function Show-ElbTargetGroup
             foreach ($_health in $_health_list) {
                 $_checked     = $_health.State -eq 'healthy'
                 $_description = $_checked ? "$($_health.State)" : "$($_health.State) - $($_health.Reason)"
+                if ($_.LoadBalancerArns -and $_description -eq 'unused - Target.NotInUse') {
+                    $_description = 'unused - Target.AzNotEnabledForElb'
+                }
                 New-Checkbox -PlainText:$_plain_text -Description $_description $_checked
             }
         }
