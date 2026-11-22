@@ -4,7 +4,7 @@ function Show-Lambda
     [CmdletBinding(DefaultParameterSetName = 'None')]
     param (
         [parameter(Position = 0)]
-        [ValidateSet('Default', 'Logging', 'Invocation', 'CloudFormation')]
+        [ValidateSet('Default', 'Logging', 'Invocation', 'CloudFormation', 'Network')]
         [string]
         $View = 'Default',
 
@@ -40,6 +40,9 @@ function Show-Lambda
     $_pass_thru        = $PassThru.IsPresent
     $_plain_text       = $PlainText.IsPresent
     $_no_row_separator = $NoRowSeparator.IsPresent
+
+    # For easy pick up.
+    $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
 
     $_select_definition = @{
         ApplicationLogLevel = {
@@ -110,6 +113,9 @@ function Show-Lambda
         )
         CloudFormation = @(
             'Name', 'StackName', 'LogicalId', 'LastModified', 'LastEvent'
+        )
+        Network = @(
+            'Name', 'Vpc', 'Subnet', 'SecurityGroup'
         )
     }
 
@@ -248,6 +254,25 @@ function Show-Lambda
             {
                 $_tags_lookup[$_function.FunctionArn] = Get-LMResourceTag -Verbose:$false $_function.FunctionArn
             }
+        }
+        catch {
+            # Remove caught exception emitted into $Error list.
+            Pop-ErrorRecord $_
+
+            # Re-throw caught exception.
+            $PSCmdlet.ThrowTerminatingError($_)
+        }
+    }
+
+    # Collect network details.
+    if ($_view -in @('Network'))
+    {
+s       Write-Message -Progress $_cmdlet_name 'Retrieving network details.'
+        try {
+            $_vpc_config_list = $_lambda_list | Select-Object -ExpandProperty VpcConfig
+            $_vpc_list = $_vpc_config_list | Select-Object -Unique -ExpandProperty VpcId
+            $_subnet_list = $_vpc_config_list | Select-Object -Unique -ExpandProperty SubnetIds | ForEach-Object {$_}
+            $_sg_list = $_vpc_config_list | Select-Object -Unique -ExpandProperty SecurityGroupIds | ForEach-Object {$_}
         }
         catch {
             # Remove caught exception emitted into $Error list.

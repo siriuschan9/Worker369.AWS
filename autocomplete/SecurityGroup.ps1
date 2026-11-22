@@ -3,7 +3,8 @@ $_cmd_lookup = @{
     GroupId = @(
         'Rename-SecurityGroup', 'Remove-SecurityGroup', 'Clear-SecurityGroup', 'Resolve-SecurityGroup',
         'Set-DefaultSecurityGroup',
-        'Show-SecurityGroupRule'
+        'Show-SecurityGroupRule',
+        'Get-SecurityGroupRuleExpression'
 
     )
     GroupName = @(
