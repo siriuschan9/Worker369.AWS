@@ -1,0 +1,191 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        table.outer {
+            width: max-content;
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+        table.inner {
+            border-spacing: 0;
+            border-collapse: collapse;
+            width: 100%;
+            font-family: monaco, consolas, lucida console, monospace;
+            font-size: 75%;
+            line-height: 2em;
+            letter-spacing: -0.3;
+        }
+        table.inner thead tr.grp-head th {
+            text-align: left;
+            padding: 1em 0.33em;
+            color: #505050;
+            font-weight: normal;
+            border-bottom: solid 1px #e3e3e3;
+        }
+        table.inner thead tr.col-head th {
+            text-align: left;
+            padding: 0.33em 1em;
+            font-weight: normal;
+            background-color: #f8f8f8;
+            color: #761a1a;
+            border-bottom: solid 1px #e3e3e3;
+        }
+        table.inner tbody tr td{
+            padding: 0.33em 1em;
+            vertical-align: top;
+            color: #505050;
+            white-space: pre-wrap;
+            border-bottom: solid 1px #e3e3e3;
+        }
+        table.inner tbody tr.last td{
+            padding: 0.33em 1em;
+            border-bottom: none;
+        }
+        span.grp-name {
+            font-weight: normal;
+            color: #761a1a;
+        }
+        span.hint {
+            font-size: 90%;
+            text-decoration: underline;
+            color: #537791;
+        }
+    </style>
+</head>
+<body>
+    <table class="outer">
+        <tr>
+            <td>
+                <table class="inner">
+                    <thead>
+                        <tr class="grp-head">
+                            <th colspan="11" class="grp-head"><span class="grp-name">OwnerId :</span> 0518-2672-3662
+                        </tr>
+                        <tr class="col-head">
+                            <th>VpcId</th>
+                            <th>Name</th>
+                            <th>State</th>
+                            <th>Tenancy</th>
+                            <th>Ipv4Cidr</th>
+                            <th>Ipv6Cidr</th>
+                            <th>IsDefault</th>
+                            <th>DnsResolution</th>
+                            <th>DnsHostnames</th>
+                            <th>NauMetrics</th>
+                            <th>BlockPublicAccess</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>vpc-0781d6ac68f33b534</td>
+                            <td>example-1</td>
+                            <td>available</td>
+                            <td>default</td>
+                            <td>10.1.0.0/16</td>
+                            <td>2406:da18:d95:a600::/56</td>
+                            <td>[   ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[   ]</td>
+                            <td>off</td>
+                        </tr>
+                        <tr>
+                            <td>vpc-06c969de019d3821e</td>
+                            <td>example-2</td>
+                            <td>available</td>
+                            <td>default</td>
+                            <td>10.2.0.0/16</td>
+                            <td>2406:da18:d04:4a00::/56</td>
+                            <td>[   ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[   ]</td>
+                            <td>off</td>
+                        </tr>
+                        <tr>
+                            <td>vpc-071709ffc6162e21c</td>
+                            <td>example-3</td>
+                            <td>available</td>
+                            <td>default</td>
+                            <td>10.3.0.0/16<br>100.64.100.0/24</td>
+                            <td>2406:da18:373:cc00::/56</td>
+                            <td>[   ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[   ]</td>
+                            <td>off</td>
+                        </tr>
+                        <tr>
+                            <td>vpc-05acabb670e30e0f1</td>
+                            <td>example-4</td>
+                            <td>available</td>
+                            <td>default</td>
+                            <td>10.4.0.0/16</td>
+                            <td></td>
+                            <td>[   ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[   ]</td>
+                            <td>off</td>
+                        </tr>
+                        <tr class="last">
+                            <td>&nbsp</td>
+                        </tr>
+                    </tbody>
+                    <thead>
+                        <tr class="grp-head">
+                            <th colspan="11" class="grp-head"><span class="grp-name">OwnerId :</span> 8318-3800-9222
+                        </tr>
+                        <tr class="col-head">
+                            <th>VpcId</th>
+                            <th>Name</th>
+                            <th>State</th>
+                            <th>Tenancy</th>
+                            <th>Ipv4Cidr</th>
+                            <th>Ipv6Cidr</th>
+                            <th>IsDefault</th>
+                            <th>DnsResolution</th>
+                            <th>DnsHostnames</th>
+                            <th>NauMetrics</th>
+                            <th>BlockPublicAccess</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>vpc-0e27dd6769a4064df</td>
+                            <td>default</td>
+                            <td>available</td>
+                            <td>default</td>
+                            <td>172.31.0.0/16</td>
+                            <td>2406:da18:4a8:9200::/56</td>
+                            <td>[ ✓ ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[   ]</td>
+                            <td>off</td>
+                        </tr>
+                        <tr>
+                            <td>vpc-06eefe056fed096e9</td>
+                            <td>example-hub</td>
+                            <td>available</td>
+                            <td>default</td>
+                            <td>10.0.0.0/19</td>
+                            <td>2406:da18:a84:7600::/56</td>
+                            <td>[   ]</td>
+                            <td>[ ✓ ]</td>
+                            <td>[   ]</td>
+                            <td>[   ]</td>
+                            <td>off</td>
+                        </tr>
+                        <tr class="last">
+                            <td>&nbsp</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+
