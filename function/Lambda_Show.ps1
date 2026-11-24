@@ -43,6 +43,7 @@ function Show-Lambda
 
     # For easy pick up.
     $_cmdlet_name = $PSCmdlet.MyInvocation.MyCommand.Name
+    $_dash        = $_plain_text ? '-' : "$($PSStyle.Dim)-$($PSStyle.Reset)"
 
     $_select_definition = @{
         ApplicationLogLevel = {
@@ -84,6 +85,12 @@ function Show-Lambda
         Runtime = {
             $_.Runtime
         }
+        SecurityGroup = {
+            $_sg_id_list = $_.VpcConfig.SecurityGroupIds
+            $_sg_id_list `
+                ? ($_sg_id_list | ForEach-Object { $_sg_lookup[$_] | Get-ResourceString -IdPropertyName 'GroupId' -NamePropertyName 'GroupName' -PlainText:$_plain_text }) `
+                : $_dash
+        }
         Size = {
             New-ByteInfo -MetricSystem SI $_.CodeSize
         }
@@ -93,11 +100,23 @@ function Show-Lambda
         SystemLogLevel = {
             $_.LoggingConfig.SystemLogLevel
         }
+        Subnet = {
+            $_subnet_id_list = $_.VpcConfig.SubnetIds
+            $_subnet_id_list `
+                ? ($_subnet_id_list | ForEach-Object { $_subnet_lookup[$_] | Get-ResourceString -IdPropertyName 'SubnetId' -TagPropertyName 'Tags' -PlainText:$_plain_text }) `
+                : $_dash
+        }
         Timeout = {
             $_.Timeout
         }
         Type = {
             $_.PackageType
+        }
+        Vpc = {
+            $_vpc_id = $_.VpcConfig.VpcId
+            $_vpc_id `
+                ? ($_vpc_lookup[$_vpc_id] | Get-ResourceString -IdPropertyName 'VpcId' -TagPropertyName 'Tags' -PlainText:$_plain_text) `
+                : $_dash
         }
     }
 
@@ -267,12 +286,27 @@ function Show-Lambda
     # Collect network details.
     if ($_view -in @('Network'))
     {
-s       Write-Message -Progress $_cmdlet_name 'Retrieving network details.'
+        Write-Message -Progress $_cmdlet_name 'Retrieving network details.'
         try {
             $_vpc_config_list = $_lambda_list | Select-Object -ExpandProperty VpcConfig
             $_vpc_list = $_vpc_config_list | Select-Object -Unique -ExpandProperty VpcId
             $_subnet_list = $_vpc_config_list | Select-Object -Unique -ExpandProperty SubnetIds | ForEach-Object {$_}
             $_sg_list = $_vpc_config_list | Select-Object -Unique -ExpandProperty SecurityGroupIds | ForEach-Object {$_}
+
+            $_vpc_lookup = Get-EC2Vpc -Verbose:$false -Filter @{
+                Name = 'vpc-id'
+                Values = $_vpc_list
+            } | Group-Object -AsHashTable VpcId
+
+            $_subnet_lookup = Get-EC2Subnet -Verbose:$false -Filter @{
+                Name = 'subnet-id'
+                Values = $_subnet_list
+            } | Group-Object -AsHashTable SubnetId
+
+            $_sg_lookup = Get-EC2SecurityGroup -Verbose:$false -Filter @{
+                Name = 'group-id'
+                Values = $_sg_list
+            } | Group-Object -AsHashTable GroupId
         }
         catch {
             # Remove caught exception emitted into $Error list.
